@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNervel } from '../../context/NervelContext';
+import { toast } from '../../context/ToastContext';
 import { formatToman, toPersianDigits } from '../../utils/formatters';
 import { X, CreditCard, Check } from 'lucide-react';
 
@@ -26,7 +27,11 @@ export const TopUpModal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAmountValid || isProcessing) return;
+    if (!isAmountValid) {
+      toast.warning('حداقل مبلغ شارژ', 'حداقل مبلغ برای افزایش اعتبار ۵۰٬۰۰۰ تومان است.');
+      return;
+    }
+    if (isProcessing) return;
 
     setIsProcessing(true);
     setTimeout(() => {
@@ -90,7 +95,7 @@ export const TopUpModal: React.FC = () => {
                     }}
                     className={`rounded border px-3 py-2 text-sm tabular-nums transition-colors ${
                       isSelected
-                        ? 'border-[#7C3AED] bg-[#17171A] text-[#F4F4F5] font-semibold'
+                        ? 'border-[#7C3AED] bg-[#17171A] text-[#F4F4F5] font-medium'
                         : 'border-[#27272A] bg-transparent text-[#A1A1AA] hover:border-[#3F3F46]'
                     }`}
                   >
@@ -104,7 +109,7 @@ export const TopUpModal: React.FC = () => {
                 onClick={() => setIsCustom(true)}
                 className={`rounded border px-3 py-2 text-sm transition-colors ${
                   isCustom
-                    ? 'border-[#7C3AED] bg-[#17171A] text-[#F4F4F5] font-semibold'
+                    ? 'border-[#7C3AED] bg-[#17171A] text-[#F4F4F5] font-medium'
                     : 'border-[#27272A] bg-transparent text-[#A1A1AA] hover:border-[#3F3F46]'
                 }`}
               >

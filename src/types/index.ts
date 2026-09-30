@@ -6,9 +6,33 @@ export type TaskStatus =
   | 'validating'
   | 'reassigning'
   | 'completed'
+  | 'failed'
   | 'cancelled';
 
 export type InputSourceType = 'github' | 'zip' | 'direct';
+
+export type ActionRequiredType =
+  | 'clarification'
+  | 'increase_reserve'
+  | 'worker_reassignment'
+  | 'repo_access';
+
+export interface TaskActionRequired {
+  type: ActionRequiredType;
+  title: string;
+  description: string;
+  actionLabel: string;
+  createdAt: string;
+  expiresAt?: string;
+  question?: string;
+  customerResponse?: string;
+  failedWorkerId?: string;
+  reason?: string;
+  missedHeartbeats?: number;
+  secondsLeftBeforeAuto?: number;
+  requiredReserveAmount?: number;
+  missingPermissions?: string[];
+}
 
 export interface ChangedFile {
   filename: string;
@@ -36,6 +60,7 @@ export interface TaskLog {
 
 export interface TaskItem {
   id: string; // e.g. tsk_9f4b82
+  projectId?: string;
   title: string;
   description: string;
   acceptanceCriteria: string[];
@@ -71,7 +96,10 @@ export interface TaskItem {
   workerHostname?: string;
   workerPlan?: string;
 
-  // Waiting for response state
+  // Generalized Action Required Structure (clarification, increase_reserve, worker_reassignment, repo_access)
+  actionRequired?: TaskActionRequired;
+
+  // Backward compatibility fields
   waitingData?: {
     question: string;
     askedAt: string;
@@ -93,6 +121,8 @@ export interface TaskItem {
     prUrl?: string;
     patchFilename?: string;
     zipFilename?: string;
+    prFailed?: boolean;
+    prErrorReason?: string;
   };
 
   // Dispute / Objection
@@ -102,12 +132,13 @@ export interface TaskItem {
     status: 'pending' | 'reviewed' | 'resolved';
   };
 
+  isPinned?: boolean;
   logs: TaskLog[];
 }
 
 export interface Transaction {
   id: string; // tx_...
-  type: 'topup' | 'reserve' | 'settlement' | 'refund';
+  type: 'topup' | 'reserve' | 'release' | 'charge' | 'settlement' | 'refund';
   amount: number; // in Toman
   date: string;
   title: string;
@@ -116,21 +147,96 @@ export interface Transaction {
   trackingCode?: string;
 }
 
+export type NotificationType =
+  | 'task_completed'
+  | 'customer_input_required'
+  | 'reserve_limit_reached'
+  | 'worker_failure'
+  | 'reassignment'
+  | 'repo_access_issue'
+  | 'dispute_update'
+  | 'wallet_issue';
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  timestamp: string;
+  isRead: boolean;
+  isActionRequired?: boolean;
+  taskId?: string;
+  actionLabel?: string;
+}
+
+export type OperatorTab =
+  | 'overview'
+  | 'active_jobs'
+  | 'history'
+  | 'worker'
+  | 'earnings'
+  | 'withdrawals'
+  | 'settings';
+
+export interface OperatorWithdrawal {
+  id: string; // e.g. wdr_81920
+  amount: number;
+  iban: string;
+  bankName?: string;
+  requestedAt: string;
+  status: 'pending_review' | 'processing_paya' | 'completed' | 'rejected';
+  processedAt?: string;
+  trackingCode?: string;
+  note?: string;
+}
+
+export type OnboardingStepId =
+  | 'register'
+  | 'download_agent'
+  | 'install'
+  | 'pair_auth'
+  | 'detect_provider'
+  | 'system_health'
+  | 'connectivity_test'
+  | 'sandbox_check'
+  | 'worker_online';
+
+export interface OnboardingStep {
+  id: OnboardingStepId;
+  stepNumber: number;
+  title: string;
+  description: string;
+  status: 'completed' | 'in_progress' | 'pending' | 'failed';
+  details?: string;
+}
+
 export interface OperatorNode {
   workerId: string;
   status: 'online' | 'busy' | 'offline';
   hostname: string;
   os: string;
   daemonVersion: string;
+  activeProvider: string;
+  providerPlan: string;
   codexPlan: string;
-  maxAllowedCapacity: number;
+  remainingProviderQuotaPercent: number;
+  supportedModels: string[];
+  maxAllowedCapacity: number; // system maximum determined by plan, models, resources, reliability
   currentAssignedCount: number;
-  operatorCapacityLimit: number;
+  operatorCapacityLimit: number; // voluntary chosen concurrency
   totalEarningsToman: number;
   withdrawableBalanceToman: number;
+  settledEarningsToman: number;
   uptimeRate: number; // e.g. 99.8
   totalJobsExecuted: number;
   lastHeartbeat: string;
+  lastHeartbeatSecondsAgo: number;
+  missedHeartbeats: number;
+  latencyMs: number;
+  dockerStatus: 'healthy' | 'degraded' | 'offline';
+  isolationType: string;
+  cpuCores: number;
+  memoryGb: number;
 }
 
 export interface ActivityEvent {
@@ -143,12 +249,27 @@ export interface ActivityEvent {
   metadata?: string;
 }
 
+export interface Project {
+  id: string; // e.g. prj_payment_gw
+  name: string;
+  sourceType: InputSourceType;
+  repoUrl?: string;
+  defaultBranch?: string;
+  zipFilename?: string;
+  uploadedFilesCount?: number;
+  instructions: string;
+  isPinned: boolean;
+  createdAt: string;
+  lastActivityAt: string;
+}
+
 export type ViewMode =
   | 'dashboard'
+  | 'projects'
+  | 'project_detail'
   | 'new_task'
   | 'tasks_list'
   | 'task_detail'
   | 'wallet'
-  | 'activity'
   | 'settings'
   | 'operator';

@@ -1,215 +1,251 @@
 import React, { useState } from 'react';
 import { useNervel } from '../../context/NervelContext';
 import { formatToman, toPersianDigits } from '../../utils/formatters';
-import { getStaggerStyle } from '../../utils/motion';
-import { Plus, ArrowDownLeft, ArrowUpRight, ShieldCheck } from 'lucide-react';
+import { Button } from '../common/Button';
+import {
+  Plus,
+  ArrowDownLeft,
+  ArrowUpRight,
+  FileText,
+  Search,
+} from 'lucide-react';
 
 export const WalletView: React.FC = () => {
-  const { walletBalance, reservedBalance, transactions, setIsTopUpModalOpen, navigateToTask } = useNervel();
-  const [filterType, setFilterType] = useState<string>('all');
+  const {
+    walletBalance,
+    reservedBalance,
+    transactions,
+    setIsTopUpModalOpen,
+    navigateToTask,
+  } = useNervel();
 
-  const filteredTx = transactions.filter((tx) => {
-    if (filterType === 'all') return true;
-    return tx.type === filterType;
-  });
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const totalBalance = walletBalance + reservedBalance;
 
+  // Filter transactions
+  const filteredTransactions = transactions.filter((tx) => {
+    // Type filtering
+    if (activeTab === 'reservations' && tx.type !== 'reserve' && tx.type !== 'release') return false;
+    if (activeTab === 'charges' && tx.type !== 'charge' && tx.type !== 'settlement') return false;
+    if (activeTab === 'refunds' && tx.type !== 'refund') return false;
+    if (activeTab === 'topups' && tx.type !== 'topup') return false;
+
+    // Search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchTitle = tx.title.toLowerCase().includes(q);
+      const matchId = tx.id.toLowerCase().includes(q);
+      const matchTask = tx.taskId?.toLowerCase().includes(q) || false;
+      return matchTitle || matchId || matchTask;
+    }
+
+    return true;
+  });
+
   return (
-    <div className="space-y-8">
-      
-      {/* Header: 22-24px heading */}
-      <div
-        style={getStaggerStyle(0)}
-        className="animate-nervel-enter flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#17171A]"
-      >
+    <div className="w-full space-y-8 animate-nervel-enter">
+      {/* Page Header with Top-Up Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#18181C]">
         <div>
-          <h2 className="text-[22px] sm:text-2xl font-bold text-[#F4F4F5] leading-tight">
-            کیف پول و دفتر کل مالی
-          </h2>
+          <h1 className="text-2xl font-bold text-[#F4F4F5]">
+            کیف پول
+          </h1>
           <p className="text-sm text-[#71717A] mt-1.5 leading-relaxed">
-            دفتر کل شفاف، ثبت رزرو سقف اعتبار تسک‌ها و بازگشت خودکار مازاد پس از تسویه نهایی
+            مدیریت موجودی آزاد، سقف‌های مسدود در تسک‌ها و تاریخچه تراکنش‌ها
           </p>
         </div>
 
-        <button
+        <Button
+          variant="primary"
           onClick={() => setIsTopUpModalOpen(true)}
-          className="flex items-center gap-2 rounded bg-[#7C3AED] px-4 py-2 text-sm font-medium text-white hover:bg-[#8B5CF6] active:bg-[#6D28D9] transition-colors self-start sm:self-auto"
+          rightIcon={<Plus className="w-4 h-4" />}
+          className="self-start sm:self-auto font-medium shrink-0"
         >
-          <Plus className="h-4 w-4" />
-          <span>افزایش اعتبار کیف پول</span>
-        </button>
+          افزایش اعتبار
+        </Button>
       </div>
 
-      {/* Financial Balances: Flat 3-column metrics with 24-28px values */}
-      <div
-        style={getStaggerStyle(1)}
-        className="animate-nervel-enter grid grid-cols-1 sm:grid-cols-3 gap-6 py-2"
-      >
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-sm text-[#71717A]">
-            <span>موجودی در دسترس (قابل تخصیص)</span>
-            <span className="text-xs text-[#52525B]">تومان</span>
+      {/* Clean Metric Row (No giant cards, subtle vertical dividers, white values) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-2 border-b border-[#18181C] pb-6 divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-[#1A1A1E]">
+        {/* Available Balance */}
+        <div className="space-y-1 pt-3 sm:pt-0">
+          <span className="text-xs text-[#71717A] block">موجودی در دسترس:</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-bold text-[#F4F4F5] tabular-nums">
+              {formatToman(walletBalance)}
+            </span>
           </div>
-          <div className="tabular-nums text-2xl sm:text-3xl font-bold text-[#F4F4F5]">
-            {formatToman(walletBalance)}
-          </div>
-          <span className="text-xs sm:text-sm text-[#71717A] block leading-relaxed">
-            آماده برای رزرو سقف تسک‌های جدید
+          <span className="text-xs text-[#52525B] block pt-0.5">
+            اعتبار آزاد برای تخصیص به تسک‌های جدید
           </span>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-sm text-[#71717A]">
-            <span>اعتبار در حال رزرو</span>
-            <span className="text-xs text-[#52525B]">تومان</span>
+        {/* Reserved Balance */}
+        <div className="space-y-1 pt-4 sm:pt-0 sm:pr-6">
+          <span className="text-xs text-[#71717A] block">سقف مسدود در تسک‌ها:</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-bold text-[#F4F4F5] tabular-nums">
+              {formatToman(reservedBalance)}
+            </span>
           </div>
-          <div className="tabular-nums text-2xl sm:text-3xl font-bold text-[#F4F4F5]">
-            {formatToman(reservedBalance)}
-          </div>
-          <span className="text-xs sm:text-sm text-[#71717A] block leading-relaxed">
-            مسدود برای تسک‌های در حال اجرا در کانتینرها
+          <span className="text-xs text-[#52525B] block pt-0.5">
+            تضمین موقت اجرای کانتینرها تا تکمیل و تست
           </span>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-sm text-[#71717A]">
-            <span>کل دارایی حساب کاربری</span>
-            <span className="text-xs text-[#52525B]">تومان</span>
+        {/* Total Balance */}
+        <div className="space-y-1 pt-4 sm:pt-0 sm:pr-6">
+          <span className="text-xs text-[#71717A] block">مجموع دارایی حساب:</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-bold text-[#A1A1AA] tabular-nums">
+              {formatToman(totalBalance)}
+            </span>
           </div>
-          <div className="tabular-nums text-2xl sm:text-3xl font-bold text-[#D4D4D8]">
-            {formatToman(totalBalance)}
-          </div>
-          <span className="text-xs sm:text-sm text-[#71717A] block leading-relaxed">
-            حداقل تراکنش شارژ: ۵۰٬۰۰۰ تومان
+          <span className="text-xs text-[#52525B] block pt-0.5">
+            مجموع موجودی آزاد و مبالغ رزرو شده
           </span>
         </div>
       </div>
 
-      {/* Operational Policy Note - Neutral restrained */}
-      <div
-        style={getStaggerStyle(2)}
-        className="animate-nervel-enter text-sm text-[#71717A] flex items-center gap-3 py-3 px-4 border border-[#17171A] rounded leading-relaxed"
-      >
-        <ShieldCheck className="h-5 w-5 text-[#71717A] shrink-0" />
-        <span>
-          <strong className="text-[#D4D4D8] font-medium">سیاست مالی Nervel: </strong>
-          هنگام ثبت تسک، سقف اعتبار رزرو می‌شود. پس از تکمیل و پاس‌شدن آزمون‌های QA، صرفاً هزینه مصرف واقعی کسر شده و مابقی سقف بلافاصله به موجودی آزاد عودت می‌گردد.
-        </span>
-      </div>
+      {/* Ledger & Transactions Section (One Structural List/Table) */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-base font-bold text-[#F4F4F5]">
+            تراکنش‌های حساب
+          </h2>
 
-      {/* Transactions Section */}
-      <div style={getStaggerStyle(3)} className="animate-nervel-enter space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h3 className="text-[17px] sm:text-lg font-semibold text-[#F4F4F5]">
-            دفتر کل تراکنش‌ها ({toPersianDigits(filteredTx.length)})
-          </h3>
+          {/* Search Input */}
+          <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              placeholder="جستجو در تراکنش‌ها..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-9 bg-[#09090C] border border-[#27272A] hover:border-[#38383E] focus:border-[#7C3AED] rounded-md pr-8 pl-3 text-xs text-[#F4F4F5] placeholder-[#52525B] focus:outline-none transition-colors"
+            />
+            <Search className="w-3.5 h-3.5 text-[#71717A] absolute right-2.5 top-2.5 pointer-events-none" />
+          </div>
+        </div>
 
-          {/* Filter tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            {[
-              { id: 'all', label: 'همه' },
-              { id: 'topup', label: 'شارژ' },
-              { id: 'reserve', label: 'رزرو تسک' },
-              { id: 'settlement', label: 'تسویه نهایی' },
-              { id: 'refund', label: 'بازگشت مازاد' },
-            ].map((tab) => (
+        {/* Filter Segmented Controls */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-medium border-b border-[#18181C]">
+          {[
+            { id: 'all', label: 'همه' },
+            { id: 'reservations', label: 'رزرو و آزادسازی' },
+            { id: 'charges', label: 'تسویه مصرف' },
+            { id: 'refunds', label: 'عودت وجه' },
+            { id: 'topups', label: 'شارژ حساب' },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
               <button
                 key={tab.id}
-                onClick={() => setFilterType(tab.id)}
-                className={`px-3.5 py-1.5 rounded text-sm transition-colors whitespace-nowrap font-medium ${
-                  filterType === tab.id
-                    ? 'bg-[#17171A] text-[#F4F4F5]'
-                    : 'text-[#71717A] hover:text-[#D4D4D8]'
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+                  isActive
+                    ? 'border-[#7C3AED] text-[#F4F4F5] font-medium'
+                    : 'border-transparent text-[#71717A] hover:text-[#D4D4D8]'
                 }`}
               >
                 {tab.label}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        {/* Ledger Table - Flat borders, no monospace */}
-        <div className="border border-[#17171A] rounded overflow-hidden">
-          {filteredTx.length === 0 ? (
-            <div className="p-12 text-center text-sm text-[#71717A]">
-              تراکنشی در این دسته‌بندی ثبت نشده است.
+        {/* Transactions Table */}
+        <div className="border border-[#18181C] rounded-lg overflow-hidden bg-[#08080A]">
+          {filteredTransactions.length === 0 ? (
+            <div className="py-16 text-center text-xs text-[#71717A] space-y-2">
+              <FileText className="w-6 h-6 mx-auto text-[#3F3F46]" />
+              <p>هیچ تراکنشی با این مشخصات یافت نشد.</p>
             </div>
           ) : (
             <div>
               {/* Header */}
-              <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 border-b border-[#17171A] bg-[#060607] text-sm text-[#71717A]">
+              <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 border-b border-[#141418] bg-[#0A0A0D] text-xs font-medium text-[#71717A]">
                 <div className="col-span-2">شناسه و نوع</div>
-                <div className="col-span-4">شرح تراکنش و تسک</div>
-                <div className="col-span-3">زمان ثبت</div>
+                <div className="col-span-5">شرح رویداد مالی</div>
+                <div className="col-span-2">زمان ثبت</div>
                 <div className="col-span-3 text-left">مبلغ (تومان)</div>
               </div>
 
               {/* Rows */}
-              <div className="divide-y divide-[#17171A]">
-                {filteredTx.map((tx) => {
+              <div className="divide-y divide-[#141418]">
+                {filteredTransactions.map((tx) => {
                   const isPositive = tx.amount > 0;
+
+                  let typeLabel = 'تراکنش';
+                  if (tx.type === 'topup') typeLabel = 'شارژ حساب';
+                  else if (tx.type === 'reserve') typeLabel = 'رزرو سقف تسک';
+                  else if (tx.type === 'release') typeLabel = 'آزادسازی سقف';
+                  else if (tx.type === 'charge' || tx.type === 'settlement') typeLabel = 'تسویه مصرف';
+                  else if (tx.type === 'refund') typeLabel = 'عودت وجه';
+
                   return (
                     <div
                       key={tx.id}
-                      className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 px-5 py-4 hover:bg-[#080808] transition-colors text-sm items-start sm:items-center"
+                      className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 px-5 py-3.5 hover:bg-[#0C0C0F] transition-colors text-xs items-start sm:items-center"
                     >
-                      {/* Col 1: Type */}
-                      <div className="col-span-2 flex items-center gap-2.5">
-                        <span className="h-5 w-5 rounded flex items-center justify-center shrink-0 text-[#71717A]">
+                      {/* Col 1: Type & ID */}
+                      <div className="col-span-2 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded flex items-center justify-center shrink-0 text-[#71717A]">
                           {isPositive ? (
-                            <ArrowDownLeft className="h-4 w-4" />
+                            <ArrowDownLeft className="w-3.5 h-3.5 text-[#10B981]" />
                           ) : (
-                            <ArrowUpRight className="h-4 w-4" />
+                            <ArrowUpRight className="w-3.5 h-3.5 text-[#71717A]" />
                           )}
                         </span>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-[#71717A]" dir="ltr">
+                        <div>
+                          <span className="text-[11px] font-latin tabular-nums text-[#71717A] block" dir="ltr">
                             {tx.id}
                           </span>
-                          <span className="text-xs text-[#A1A1AA] font-medium">
-                            {tx.type === 'topup'
-                              ? 'شارژ حساب'
-                              : tx.type === 'reserve'
-                              ? 'رزرو اعتبار'
-                              : tx.type === 'settlement'
-                              ? 'تسویه مصرف'
-                              : 'آزادسازی مازاد'}
+                          <span className="text-xs font-medium text-[#D4D4D8]">
+                            {typeLabel}
                           </span>
                         </div>
                       </div>
 
-                      {/* Col 2: Description & Task */}
-                      <div className="col-span-4 min-w-0">
-                        <div className="text-[#F4F4F5] font-medium truncate">{tx.title}</div>
-                        {tx.taskId && (
-                          <button
-                            onClick={() => navigateToTask(tx.taskId!)}
-                            className="text-xs sm:text-sm text-[#7C3AED] hover:underline block mt-0.5"
-                            dir="ltr"
-                          >
-                            تسک: {tx.taskId}
-                          </button>
-                        )}
-                        {tx.trackingCode && (
-                          <span className="text-xs text-[#52525B] block mt-0.5" dir="ltr">
-                            کد رهگیری: {tx.trackingCode}
-                          </span>
-                        )}
+                      {/* Col 2: Title & Task Link */}
+                      <div className="col-span-5 min-w-0 space-y-0.5">
+                        <div className="text-[#F4F4F5] font-medium truncate">
+                          {tx.title}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap text-[11px] text-[#71717A]">
+                          {tx.taskId && (
+                            <button
+                              type="button"
+                              onClick={() => navigateToTask(tx.taskId!)}
+                              className="inline-flex items-center gap-1 text-[#7C3AED] hover:underline cursor-pointer"
+                            >
+                              <span>تسک:</span>
+                              <span className="font-latin tabular-nums" dir="ltr">{tx.taskId}</span>
+                            </button>
+                          )}
+                          {tx.trackingCode && (
+                            <span className="inline-flex items-center gap-1 text-[#71717A]">
+                              <span>رهگیری:</span>
+                              <span className="font-latin tabular-nums" dir="ltr">{tx.trackingCode}</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Col 3: Date */}
-                      <div className="col-span-3 text-xs sm:text-sm text-[#71717A]">{tx.date}</div>
+                      <div className="col-span-2 text-xs text-[#71717A] whitespace-nowrap">
+                        {tx.date}
+                      </div>
 
                       {/* Col 4: Amount */}
                       <div className="col-span-3 text-left w-full sm:w-auto">
-                        <span
-                          className="tabular-nums text-base font-semibold text-[#F4F4F5]"
-                          dir="ltr"
-                        >
+                        <span className="tabular-nums font-medium text-sm text-[#F4F4F5]">
                           {isPositive ? '+' : ''}
-                          {formatToman(tx.amount)}
+                          {toPersianDigits(new Intl.NumberFormat('en-US').format(tx.amount))}
                         </span>
+                        <span className="text-xs text-[#71717A] mr-1">تومان</span>
                       </div>
                     </div>
                   );
@@ -219,7 +255,6 @@ export const WalletView: React.FC = () => {
           )}
         </div>
       </div>
-
     </div>
   );
 };

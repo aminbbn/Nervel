@@ -1,248 +1,246 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   Yekan Bakh Fonts (with Persian Numerals - Primary UI Font)
-   Ideal for Persian UI, headings, body text, dates, prices & counters
+   IRANYekan Local Fonts (FaNum - Explicit 4-Weight Mapping: 400, 500, 700, 800)
+   No external network downloads. No synthetic fonts.
    ========================================================================== */
-@font-face {
-  font-family: 'YekanBakhFaNum';
-  font-style: normal;
-  font-weight: 100;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWQdVn2BDupy5oitI9YSWV8a6NAL0mXBzjlRHn') format('woff2');
-  font-display: swap;
-}
 
+/* 400 Regular */
 @font-face {
-  font-family: 'YekanBakhFaNum';
-  font-style: normal;
-  font-weight: 300;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWJbAYiufqam3lisx10HfzQyVevtoFgcOWrZ6h') format('woff2');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'YekanBakhFaNum';
+  font-family: 'IRANYekan';
   font-style: normal;
   font-weight: 400;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWrgwUjITIE9ly14nBYCVOQhcURkJuDAKLXmZt') format('woff2');
+  src: url('/fonts/iranyekanwebregularfanum.woff') format('woff'),
+       url('/fonts/iranyekanwebregularfanum.ttf') format('truetype');
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'YekanBakhFaNum';
+  font-family: 'IRANYekanFaNum';
   font-style: normal;
-  font-weight: 600;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWGX1Kv6QsFya8dPj75w6m0DZpUnuICXQe1zSM') format('woff');
+  font-weight: 400;
+  src: url('/fonts/iranyekanwebregularfanum.woff') format('woff'),
+       url('/fonts/iranyekanwebregularfanum.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* 500 Medium */
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/iranyekanwebmediumfanum.woff') format('woff'),
+       url('/fonts/iranyekanwebmediumfanum.ttf') format('truetype');
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'YekanBakhFaNum';
+  font-family: 'IRANYekanFaNum';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/iranyekanwebmediumfanum.woff') format('woff'),
+       url('/fonts/iranyekanwebmediumfanum.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* 700 Bold */
+@font-face {
+  font-family: 'IRANYekan';
   font-style: normal;
   font-weight: 700;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWVZT37RWM5zho2G1wWpDkVltmeUsidASavyZb') format('woff2');
+  src: url('/fonts/iranyekanwebboldfanum.woff') format('woff'),
+       url('/fonts/iranyekanwebboldfanum.ttf') format('truetype');
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'YekanBakhFaNum';
+  font-family: 'IRANYekanFaNum';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/iranyekanwebboldfanum.woff') format('woff'),
+       url('/fonts/iranyekanwebboldfanum.ttf') format('truetype');
+  font-display: swap;
+}
+
+/* 800 ExtraBold */
+@font-face {
+  font-family: 'IRANYekan';
   font-style: normal;
   font-weight: 800;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWTlE0ijOcCnVWhtKZdBrjUNJ8x7lsqo3kLYau') format('woff2');
+  src: url('/fonts/iranyekanwebextraboldfanum.woff') format('woff'),
+       url('/fonts/iranyekanwebextraboldfanum.ttf') format('truetype');
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'YekanBakhFaNum';
+  font-family: 'IRANYekanFaNum';
   font-style: normal;
-  font-weight: 900;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCW2Y1lBzqeny6Ogrl37EXKGYBT5h0IWMd2FZi8') format('woff2');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'YekanBakhFaNum';
-  font-style: normal;
-  font-weight: 950;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWHPOOFHpi7kPCdSFo2aI63RL145OfYVgh8szN') format('woff2');
+  font-weight: 800;
+  src: url('/fonts/iranyekanwebextraboldfanum.woff') format('woff'),
+       url('/fonts/iranyekanwebextraboldfanum.ttf') format('truetype');
   font-display: swap;
 }
 
 /* ==========================================================================
-   Yekan Bakh Fonts (Standard with Latin Numerals - Technical & Mixed)
-   Ideal for mixed strings, technical settings, forms with Latin numeric inputs
+   Tailwind Theme Tokens (Typography, Hierarchy, Font Families)
    ========================================================================== */
-@font-face {
-  font-family: 'YekanBakh';
-  font-style: normal;
-  font-weight: 100;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCW36OjkuLITClFo7fpPkWUuzGtn9BSM1EvXdHA') format('woff2');
-  font-display: swap;
-}
+@theme {
+  --font-sans: 'IRANYekanFaNum', 'IRANYekan', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-persian: 'IRANYekanFaNum', 'IRANYekan', sans-serif;
+  --font-latin: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-@font-face {
-  font-family: 'YekanBakh';
-  font-style: normal;
-  font-weight: 300;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWP9CQwDZXhV4d3AqmSM8rsKncyzD6NZbel0OE') format('woff2');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'YekanBakh';
-  font-style: normal;
-  font-weight: 400;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWjswnWbMv6CiBJP01qH5eQ2bfsWrEmvoOgzyu') format('woff2');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'YekanBakh';
-  font-style: normal;
-  font-weight: 600;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCW9Lc65iRpBbjpnwL8W2sqZM5VekAc1RuxdJgy') format('woff2');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'YekanBakh';
-  font-style: normal;
-  font-weight: 700;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWsaI5EUw5DtHG1BxL4g6PpZ0TrUXaAzNoqfQS') format('woff2');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'YekanBakh';
-  font-style: normal;
-  font-weight: 800;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCW2CWd3seny6Ogrl37EXKGYBT5h0IWMd2FZi8q') format('woff2');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'YekanBakh';
-  font-style: normal;
-  font-weight: 900;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCW2lWCPfeny6Ogrl37EXKGYBT5h0IWMd2FZi8q') format('woff2');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'YekanBakh';
-  font-style: normal;
-  font-weight: 950;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWVJJH49WM5zho2G1wWpDkVltmeUsidASavyZb') format('woff2');
-  font-display: swap;
+  /* Typography scale tokens */
+  --text-xs: 13px;
+  --text-xs--line-height: 1.55;
+  --text-sm: 14px;
+  --text-sm--line-height: 1.6;
+  --text-base: 16px;
+  --text-base--line-height: 1.7;
+  --text-md: 18px;
+  --text-md--line-height: 1.45;
+  --text-lg: 20px;
+  --text-lg--line-height: 1.4;
+  --text-xl: 25px;
+  --text-xl--line-height: 1.35;
+  --text-2xl: 28px;
+  --text-2xl--line-height: 1.3;
 }
 
 /* ==========================================================================
-   Yekan Bakh NoEn (Persian-Only Glyph Subset)
-   Falls back cleanly to Inter or monospace for Latin characters
+   Design Tokens & Base Styling
    ========================================================================== */
-@font-face {
-  font-family: 'YekanBakhNoEn';
-  font-style: normal;
-  font-weight: 400;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCW7VaS1ORPgN3mf4rIQL9pXBGJDSVaCM2E0oUs') format('woff2');
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'YekanBakhNoEn';
-  font-style: normal;
-  font-weight: 700;
-  src: url('https://famjljl5gg.ufs.sh/f/aej4FOV7nKCWXM5E4Dbb2UQgskAY6W4fi70pnGOZ3NjKeRBy') format('woff2');
-  font-display: swap;
-}
-
 @layer base {
   :root {
-    --bg-canvas: #020202;
-    --surface-1: #080808;
-    --surface-2: #0E0E10;
-    --surface-hover: #121214;
-    --border-subtle: #17171A;
-    --border-divider: #1C1C20;
-    --border-strong: #27272A;
+    /* Font families */
+    --font-persian: 'IRANYekanFaNum', 'IRANYekan', sans-serif;
+    --font-latin: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* Semantic typography scale */
+    --text-xs: 13px;       /* 13px - minor helper/meta text minimum, avoids 11px/12px */
+    --text-sm: 14px;       /* 14px - secondary text / form labels */
+    --text-base: 16px;     /* 16px - primary body text / important body / buttons / inputs */
+    --text-md: 18px;       /* 18px - subsection heading / tabs / major labels */
+    --text-lg: 20px;       /* 20px - major section heading */
+    --text-xl: 25px;       /* 25px - page title (24-26px baseline) */
+
+    /* Line heights */
+    --lh-tight: 1.35;
+    --lh-heading: 1.45;
+    --lh-body: 1.7;
+
+    /* Font weights explicitly mapped */
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+
+    /* Control sizing */
+    --control-height: 46px; /* 44-48px minimum height baseline */
+    --control-height-sm: 40px;
+
+    /* Surface & color palette */
+    --bg-canvas: #050506;
+    --bg-sidebar: #08080A;
+    --bg-header: #08080A;
+    --surface-base: #0B0B0D;
+    --surface-hover: #121215;
+    --surface-active: #17171C;
+    --border-subtle: #18181B;
+    --border-divider: #222226;
+    --border-strong: #2E2E33;
     --text-primary: #F4F4F5;
     --text-secondary: #A1A1AA;
     --text-muted: #71717A;
     --accent: #7C3AED;
     --accent-hover: #8B5CF6;
+    --accent-active: #6D28D9;
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  body {
-    background-color: #020202;
-    color: #F4F4F5;
-    font-family: 'YekanBakhFaNum', 'YekanBakh', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Disable synthetic font generation globally */
+  *, *::before, *::after {
+    font-synthesis: none !important;
+  }
+
+  html {
     font-size: 16px;
-    line-height: 1.6;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: #050506;
+    color: #F4F4F5;
+    font-family: var(--font-persian);
+    font-size: 16px;
+    line-height: var(--lh-body);
     letter-spacing: normal;
+    font-synthesis: none;
     overflow-x: hidden;
   }
 
-  /* LTR text specifically prioritizing Inter for Latin clarity */
-  [dir="ltr"] {
-    font-family: 'Inter', 'YekanBakh', system-ui, -apple-system, sans-serif;
+  /* Latin / English text priority - ONLY explicitly Latin text receives the Latin font */
+  .font-latin, [lang="en"] {
+    font-family: var(--font-latin);
   }
 
-  /* Explicit Persian Numerals font utility */
+  /* Persian UI priority */
+  .font-persian, [lang="fa"] {
+    font-family: var(--font-persian);
+  }
+
+  /* Font utility classes */
+  .font-iranyekan {
+    font-family: var(--font-persian);
+  }
+
   .font-fanum {
-    font-family: 'YekanBakhFaNum', 'Inter', sans-serif;
+    font-family: var(--font-persian);
   }
 
-  /* Standard Yekan Bakh with Latin Numerals */
-  .font-yekan {
-    font-family: 'YekanBakh', 'Inter', sans-serif;
-  }
-
-  /* NoEn Yekan Bakh */
-  .font-yekan-noen {
-    font-family: 'YekanBakhNoEn', 'Inter', sans-serif;
-  }
-
-  /* Code, Terminal, Diffs and Monospace elements */
+  /* Strictly code/terminal/diff snippets only */
   .font-code, pre, code {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-family: var(--font-mono) !important;
     font-variant-numeric: tabular-nums;
   }
 
-  /* Tabular numbers for numeric alignment without changing to monospace */
+  /* Tabular numbers for numeric alignment in tables, prices, counters, timestamps */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Custom subtle, flat scrollbar */
+  /* Subtle minimal scrollbar */
   ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
-    background: #020202;
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1C1C20;
+    background: #222226;
     border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #27272A;
+    background: #2E2E33;
   }
 }
 
-/* Nervel Standard Entrance Motion:
-   100ms duration, cubic-bezier(.16, 1, .3, 1), 20px initial vertical offset,
-   33ms stagger between meaningful units, opacity & transform only.
-*/
+/* ==========================================================================
+   Central Motion System (Cloudflare-Discipline)
+   ========================================================================== */
 @keyframes nervel-enter {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translate3d(0, 20px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -254,6 +252,102 @@
   .animate-nervel-enter {
     animation: none !important;
     opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   NERVEL Global Toast System Motion
+   Base motion: 100ms, easing: cubic-bezier(.16, 1, .3, 1)
+   Animate ONLY opacity and transform
+   ENTER: translate3d(-10px, 8px, 0) -> translate3d(0, 0, 0)
+   EXIT:  translate3d(0, 0, 0) -> translate3d(-10px, 6px, 0)
+   ========================================================================== */
+@keyframes toast-enter {
+  0% {
+    opacity: 0;
+    transform: translate3d(-10px, 8px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes toast-exit {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-10px, 6px, 0);
+  }
+}
+
+@keyframes toast-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes toast-fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-toast-enter {
+  animation: toast-enter 100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+.animate-toast-exit {
+  animation: toast-exit 100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-enter {
+    animation: toast-fade-in 80ms ease both !important;
+    transform: none !important;
+  }
+  .animate-toast-exit {
+    animation: toast-fade-out 80ms ease both !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   Public Hero Sequential Entrance Motion
+   Duration: ~200ms, Easing: cubic-bezier(0.16, 1, 0.3, 1)
+   Animate ONLY opacity and transform (no scale, no blur, no bounce)
+   ========================================================================== */
+@keyframes hero-reveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-hero-reveal {
+  animation: hero-reveal 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-reveal {
+    animation: toast-fade-in 100ms ease both !important;
     transform: none !important;
   }
 }

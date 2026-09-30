@@ -60,7 +60,7 @@ export const CodeDiffViewer: React.FC<CodeDiffViewerProps> = ({ files }) => {
               let rowClass = 'px-4 py-0.5 leading-relaxed ';
               if (isAdded) rowClass += 'bg-[#10B981]/10 text-[#34D399] border-l-2 border-[#10B981]';
               else if (isRemoved) rowClass += 'bg-[#EF4444]/10 text-[#F87171] border-l-2 border-[#EF4444]';
-              else if (isHeader) rowClass += 'bg-[#17171A] text-[#818CF8] font-semibold';
+              else if (isHeader) rowClass += 'bg-[#17171A] text-[#818CF8] font-bold';
               else rowClass += 'text-[#A1A1AA] hover:bg-[#0A0A0C]';
 
               return (

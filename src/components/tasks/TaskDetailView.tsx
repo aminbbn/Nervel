@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNervel } from '../../context/NervelContext';
-import { StatusBadge } from '../common/StatusBadge';
+import { StatusIndicator } from '../common/StatusIndicator';
 import { CodeDiffViewer } from '../common/CodeDiffViewer';
+import { Button } from '../common/Button';
+import { Tabs } from '../common/Tabs';
 import { TaskStatus } from '../../types';
 import { formatToman, toPersianDigits } from '../../utils/formatters';
-import { getStaggerStyle } from '../../utils/motion';
 import {
-  ArrowRight,
+  ArrowLeft,
+  FolderGit2,
   GitBranch,
   Terminal,
   GitPullRequest,
@@ -15,11 +17,17 @@ import {
   CheckCircle2,
   Send,
   RefreshCw,
-  XCircle,
   FileCode,
   ExternalLink,
   Flag,
+  Clock,
+  Pin,
+  Cpu,
+  Check,
+  FileArchive,
 } from 'lucide-react';
+
+type DetailTab = 'overview' | 'output' | 'activity' | 'technical';
 
 export const TaskDetailView: React.FC = () => {
   const {
@@ -28,16 +36,21 @@ export const TaskDetailView: React.FC = () => {
     setView,
     respondToWaitingWorker,
     triggerReassignNow,
+    increaseTaskReserve,
+    resolveRepoAccess,
     cancelTask,
+    togglePinTask,
+    retryPrCreation,
     simulateStateTransition,
     fileTaskDispute,
   } = useNervel();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'diff'>('overview');
+  const [activeTab, setActiveTab] = useState<DetailTab>('overview');
   const [customerAnswer, setCustomerAnswer] = useState<string>('');
   const [isDisputeOpen, setIsDisputeOpen] = useState<boolean>(false);
   const [disputeReason, setDisputeReason] = useState<string>('');
   const [disputeSubmitted, setDisputeSubmitted] = useState<boolean>(false);
+  const [isRetryingPr, setIsRetryingPr] = useState<boolean>(false);
 
   const task = tasks.find((t) => t.id === selectedTaskId) || tasks[0];
 
@@ -45,7 +58,10 @@ export const TaskDetailView: React.FC = () => {
     return (
       <div className="p-12 text-center text-sm text-[#71717A]">
         تسک مورد نظر یافت نشد.
-        <button onClick={() => setView('tasks_list')} className="block mx-auto mt-2 text-[#7C3AED]">
+        <button
+          onClick={() => setView('tasks_list')}
+          className="block mx-auto mt-2 text-[#7C3AED] hover:underline cursor-pointer"
+        >
           بازگشت به فهرست تسک‌ها
         </button>
       </div>
@@ -59,8 +75,12 @@ export const TaskDetailView: React.FC = () => {
     }
   };
 
-  const handleManualReassign = () => {
-    triggerReassignNow(task.id);
+  const handleRetryPr = () => {
+    setIsRetryingPr(true);
+    setTimeout(() => {
+      retryPrCreation(task.id);
+      setIsRetryingPr(false);
+    }, 600);
   };
 
   const handleDisputeSubmit = (e: React.FormEvent) => {
@@ -71,565 +91,916 @@ export const TaskDetailView: React.FC = () => {
       setTimeout(() => {
         setIsDisputeOpen(false);
         setDisputeSubmitted(false);
-      }, 2500);
+      }, 2000);
     }
   };
 
-  // Pipeline stages
-  const STAGES: Array<{ id: TaskStatus; label: string; desc: string }> = [
-    { id: 'queued', label: 'صف و تخصیص', desc: 'زمان‌بندی و ایزوله‌سازی کانتینر' },
-    { id: 'running', label: 'اجرای کانتینر', desc: 'ویرایش کد و ایجاد تغییرات' },
-    { id: 'validating', label: 'ارزیابی کیفی QA', desc: 'اجرای بیلد، تست‌ها و لینتر' },
-    { id: 'completed', label: 'تحویل و تسویه', desc: 'ایجاد PR، پچ و آزادسازی مازاد' },
+  // Human-readable timeline milestones based on task lifecycle
+  const activityMilestones = [
+    {
+      id: 'm1',
+      title: 'پروژه و سورس دریافت شد',
+      desc: `کدبیس ${task.repoUrl || 'سورس مستقیم'} با موفقیت خوانده و شاخه ${task.branch || 'main'} شاخص‌گذاری شد.`,
+      time: '۱۱:۳۰',
+      done: true,
+    },
+    {
+      id: 'm2',
+      title: 'محیط اجرای ایزوله آماده شد',
+      desc: 'کانتینر ایزوله موقت در ورکر بالا آمد و وابستگی‌های پکیج نصب شدند.',
+      time: '۱۱:۳۱',
+      done: true,
+    },
+    {
+      id: 'm3',
+      title: 'کد در حال بررسی و اعمال است',
+      desc: 'عامل نرم‌افزاری در حال پیاده‌سازی منطق تسک بر مبنای معیارهای پذیرش است.',
+      time: '۱۱:۳۵',
+      done: task.status !== 'queued',
+    },
+    {
+      id: 'm4',
+      title: 'تست‌های واحد و ارزیابی کیفی',
+      desc: 'اجرای تست‌های خودکار، لینتر و تطبیق ساختار فایل‌ها با دستورالعمل‌های پروژه.',
+      time: '۱۱:۵۰',
+      done: task.status === 'validating' || task.status === 'completed',
+    },
+    {
+      id: 'm5',
+      title: 'خروجی نهایی آماده شد',
+      desc: 'بسته تغییرات، Pull Request و فایل Patch ایجاد و اعتبار مازاد آزاد شد.',
+      time: task.completedAt || 'در انتظار پایان',
+      done: task.status === 'completed',
+    },
   ];
 
-  const getStageIndex = (st: TaskStatus) => {
-    if (st === 'queued' || st === 'assigning') return 0;
-    if (st === 'running' || st === 'waiting_for_customer' || st === 'reassigning') return 1;
-    if (st === 'validating') return 2;
-    if (st === 'completed') return 3;
-    return -1;
-  };
-
-  const currentStageIdx = getStageIndex(task.status);
-
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-8 animate-nervel-enter">
       
-      {/* Top Navigation & Status: 22-24px heading */}
-      <div style={getStaggerStyle(0)} className="animate-nervel-enter border-b border-[#17171A] pb-5 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm text-[#71717A]">
-            <button
-              onClick={() => setView('tasks_list')}
-              className="flex items-center gap-1.5 hover:text-[#F4F4F5] transition-colors font-medium"
-            >
-              <ArrowRight className="h-4 w-4" />
-              <span>فهرست تسک‌ها</span>
-            </button>
-            <span>/</span>
-            <span className="text-[#A1A1AA]" dir="ltr">
-              {task.id}
-            </span>
-          </div>
+      {/* =========================================================================
+          TASK DETAIL HEADER (Always visible regardless of the selected tab)
+          Communicates: Title, Project, Overall Status, Elapsed/Completion Time, Cost
+          ========================================================================= */}
+      <div className="border-b border-[#18181B] pb-6 space-y-4">
+        {/* Breadcrumb Trail */}
+        <nav className="flex items-center gap-2 text-xs text-[#71717A]" aria-label="مسیر">
+          <button
+            onClick={() => setView('tasks_list')}
+            className="hover:text-[#F4F4F5] transition-colors cursor-pointer"
+          >
+            تسک‌ها
+          </button>
+          <span>/</span>
+          <span className="text-[#A1A1AA] font-medium font-latin tabular-nums" dir="ltr">{task.id}</span>
+        </nav>
 
-          {/* Testing State Simulator */}
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-xs text-[#52525B] px-1">شبیه‌ساز وضعیت:</span>
-            {(['running', 'waiting_for_customer', 'reassigning', 'validating', 'completed'] as TaskStatus[]).map(
-              (st) => (
-                <button
-                  key={st}
-                  onClick={() => simulateStateTransition(task.id, st)}
-                  className={`px-2 py-0.5 rounded text-xs transition-colors ${
-                    task.status === st
-                      ? 'bg-[#17171A] text-[#F4F4F5] font-medium'
-                      : 'text-[#71717A] hover:text-[#A1A1AA]'
-                  }`}
-                >
-                  {st === 'waiting_for_customer'
-                    ? 'waiting'
-                    : st === 'reassigning'
-                    ? 'reassign'
-                    : st}
-                </button>
-              )
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-3.5 flex-wrap">
-              <h2 className="text-[22px] sm:text-2xl font-bold text-[#F4F4F5] leading-tight">
+        {/* High-level status area */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-[#F4F4F5] leading-snug">
                 {task.title}
-              </h2>
-              <StatusBadge status={task.status} size="md" />
+              </h1>
+
+              {/* Pin button */}
+              <button
+                type="button"
+                onClick={() => togglePinTask(task.id)}
+                title={task.isPinned ? 'حذف از نشان‌شده‌ها' : 'نشان کردن تسک'}
+                className={`p-1.5 rounded transition-colors cursor-pointer ${
+                  task.isPinned
+                    ? 'text-[#7C3AED] bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20'
+                    : 'text-[#52525B] hover:text-[#A1A1AA] hover:bg-[#141418]'
+                }`}
+              >
+                <Pin className={`h-4 w-4 ${task.isPinned ? 'fill-current' : ''}`} />
+              </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-[#71717A]">
-              <span>ثبت‌شده: {task.createdAt}</span>
-              {task.repoUrl && (
-                <span className="text-[#A1A1AA] flex items-center gap-1.5" dir="ltr">
-                  <GitBranch className="h-3.5 w-3.5" />
-                  {task.repoUrl}
+            {/* Project, Branch, Time, Cost strip */}
+            <div className="flex flex-wrap items-center gap-3 text-xs sm:text-[13px] text-[#71717A]">
+              {task.repoUrl ? (
+                <span className="flex items-center gap-1.5 text-[#A1A1AA] font-latin" dir="ltr">
+                  <FolderGit2 className="h-3.5 w-3.5 text-[#52525B]" />
+                  <span>{task.repoUrl}</span>
                 </span>
+              ) : (
+                <span className="text-[#A1A1AA]">فایل‌های مستقیم</span>
               )}
-              <span className="text-[#D4D4D8]" dir="ltr">
-                {task.modelName}
+
+              {task.branch && (
+                <>
+                  <span className="text-[#3F3F46]">·</span>
+                  <span className="flex items-center gap-1 font-latin" dir="ltr">
+                    <GitBranch className="h-3 w-3 text-[#52525B]" />
+                    <span>{task.branch}</span>
+                  </span>
+                </>
+              )}
+
+              <span className="text-[#3F3F46]">·</span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5 text-[#52525B]" />
+                <span className="tabular-nums">
+                  {task.completedAt ? `تکمیل: ${task.completedAt}` : `ثبت: ${task.createdAt}`}
+                </span>
+              </span>
+
+              <span className="text-[#3F3F46]">·</span>
+              <span className="tabular-nums font-medium text-[#F4F4F5]">
+                {task.actualCost
+                  ? `هزینه نهایی: ${formatToman(task.actualCost)}`
+                  : `سقف مسدود: ${formatToman(task.reservedCap)}`}
               </span>
             </div>
           </div>
 
-          {/* Top Actions */}
-          <div className="flex items-center gap-3">
-            {task.status !== 'completed' && task.status !== 'cancelled' && (
-              <button
+          {/* Right Status Indicator & Actions */}
+          <div className="flex items-center gap-3 shrink-0 self-start lg:self-auto">
+            <div className="px-3.5 py-1.5 rounded-md bg-[#0C0C0F] border border-[#222226]">
+              <StatusIndicator status={task.status} size="md" />
+            </div>
+
+            {/* Cancel task action if active */}
+            {task.status !== 'completed' && task.status !== 'cancelled' && task.status !== 'failed' && (
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => cancelTask(task.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#71717A] hover:text-[#EF4444] transition-colors rounded hover:bg-[#160B0B]"
+                className="text-[#71717A] hover:text-[#EF4444]"
               >
-                <XCircle className="h-4 w-4" />
-                <span>لغو تسک</span>
-              </button>
+                لغو تسک
+              </Button>
             )}
 
-            {task.status === 'completed' && (
-              <button
-                onClick={() => setIsDisputeOpen(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 text-sm text-[#A1A1AA] hover:text-[#F4F4F5] transition-colors rounded border border-[#27272A] hover:bg-[#17171A]"
+            {/* If task failed: allow filing dispute or creating new task */}
+            {task.status === 'failed' && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  if (task.projectId) {
+                    setView('new_task');
+                  } else {
+                    setView('new_task');
+                  }
+                }}
               >
-                <Flag className="h-4 w-4" />
-                <span>ثبت اعتراض فنی (Dispute)</span>
-              </button>
+                تلاش مجدد در تسک جدید
+              </Button>
+            )}
+
+            {/* Dispute button if completed or failed */}
+            {(task.status === 'completed' || task.status === 'failed') && !task.dispute && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDisputeOpen(true)}
+                className="text-[#71717A] hover:text-[#F59E0B]"
+                rightIcon={<Flag className="h-3.5 w-3.5" />}
+              >
+                ثبت اعتراض فنی
+              </Button>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Execution Pipeline Stage Bar - Flat, unboxed */}
-      <div style={getStaggerStyle(1)} className="animate-nervel-enter grid grid-cols-2 sm:grid-cols-4 gap-4 py-2">
-        {STAGES.map((st, idx) => {
-          const isPassed = currentStageIdx > idx;
-          const isCurrent = currentStageIdx === idx;
+        {/* =========================================================================
+            NEEDS ACTION STRIP (Generalized structure: clarification, increase_reserve, worker_reassignment, repo_access)
+            ========================================================================= */}
+        {(() => {
+          const action = task.actionRequired || (
+            task.waitingData
+              ? {
+                  type: 'clarification' as const,
+                  title: 'پاسخ و شفاف‌سازی مشتری مورد نیاز است',
+                  description: task.waitingData.question,
+                  actionLabel: 'ارسال پاسخ و ادامه اجرا',
+                  createdAt: task.waitingData.askedAt,
+                  question: task.waitingData.question,
+                }
+              : task.reassignData
+              ? {
+                  type: 'worker_reassignment' as const,
+                  title: 'تصمیم برای انتقال به ورکر جدید',
+                  description: 'ورکر قبلی پاسخگو نبوده و آفلاین شد. اسنپ‌شات آخرین تغییرات شما حفظ شده است.',
+                  actionLabel: 'تایید انتقال فوری به ورکر جدید',
+                  createdAt: 'هم‌اکنون',
+                  secondsLeftBeforeAuto: task.reassignData.secondsLeftBeforeAuto,
+                }
+              : null
+          );
+
+          if (!action) return null;
 
           return (
-            <div
-              key={st.id}
-              className={`py-2.5 px-1 border-b-2 transition-colors ${
-                isCurrent
-                  ? 'border-[#7C3AED]'
-                  : isPassed
-                  ? 'border-[#27272A]'
-                  : 'border-[#17171A]'
-              }`}
-            >
-              <div className="flex items-center gap-2.5 text-sm">
-                <span
-                  className={`h-5 w-5 rounded-full flex items-center justify-center text-xs tabular-nums ${
-                    isCurrent
-                      ? 'bg-[#7C3AED] text-white font-bold'
-                      : isPassed
-                      ? 'bg-[#17171A] text-[#D4D4D8] font-bold'
-                      : 'bg-[#17171A] text-[#71717A]'
-                  }`}
-                >
-                  {isPassed ? '✓' : toPersianDigits(idx + 1)}
-                </span>
-                <span
-                  className={`font-semibold ${
-                    isCurrent ? 'text-[#F4F4F5]' : isPassed ? 'text-[#D4D4D8]' : 'text-[#52525B]'
-                  }`}
-                >
-                  {st.label}
-                </span>
+            <div className="p-4 sm:p-5 rounded-lg bg-[#0F0D09] border border-[#F59E0B]/30 space-y-3 animate-nervel-enter">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium text-[#F59E0B]">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>{action.title}</span>
+                </div>
+                {action.secondsLeftBeforeAuto !== undefined && (
+                  <span className="text-xs text-[#71717A] tabular-nums">
+                    انتقال خودکار ظرف {toPersianDigits(action.secondsLeftBeforeAuto)} ثانیه
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-[#71717A] mt-1 pr-7 leading-relaxed">{st.desc}</p>
+
+              <p className="text-sm text-[#F4F4F5] leading-relaxed">
+                {action.description}
+              </p>
+
+              {/* Sub-interface based on type */}
+              {action.type === 'clarification' && (
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <input
+                    type="text"
+                    value={customerAnswer}
+                    onChange={(e) => setCustomerAnswer(e.target.value)}
+                    placeholder="پاسخ یا راهنمایی خود را به ورکر بنویسید..."
+                    className="flex-1 h-10 bg-[#161410] border border-[#3E3420] focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] rounded-md px-3.5 text-sm text-[#F4F4F5] placeholder-[#71717A] focus:outline-none transition-colors"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSendAnswer()}
+                  />
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSendAnswer}
+                    disabled={!customerAnswer.trim()}
+                    rightIcon={<Send className="h-3.5 w-3.5" />}
+                  >
+                    {action.actionLabel || 'ارسال پاسخ و ادامه اجرا'}
+                  </Button>
+                </div>
+              )}
+
+              {action.type === 'worker_reassignment' && (
+                <div className="flex items-center gap-3 pt-1">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => triggerReassignNow(task.id)}
+                    rightIcon={<RefreshCw className="h-3.5 w-3.5" />}
+                  >
+                    {action.actionLabel || 'تایید انتقال فوری به ورکر جدید'}
+                  </Button>
+                </div>
+              )}
+
+              {action.type === 'increase_reserve' && (
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => increaseTaskReserve(task.id, action.requiredReserveAmount || 30000)}
+                  >
+                    {action.actionLabel || `افزایش اعتبار سقف رزرو (+${formatToman(action.requiredReserveAmount || 30000)})`}
+                  </Button>
+                </div>
+              )}
+
+              {action.type === 'repo_access' && (
+                <div className="flex items-center gap-3 pt-1">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => resolveRepoAccess(task.id)}
+                    rightIcon={<FolderGit2 className="h-3.5 w-3.5" />}
+                  >
+                    {action.actionLabel || 'به‌روزرسانی دسترسی مخزن و ادامه اجرا'}
+                  </Button>
+                </div>
+              )}
             </div>
           );
-        })}
+        })()}
+
+        {/* Dispute Confirmation Banner */}
+        {task.dispute && (
+          <div className="p-4 rounded-md bg-[#121216] border border-[#27272A] text-xs text-[#A1A1AA] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Flag className="h-4 w-4 text-[#F59E0B]" />
+              <span>اعتراض فنی ثبت شده و در حال بررسی توسط تیم کنترل کیفیت است: «{task.dispute.reason}»</span>
+            </div>
+            <span className="text-[#10B981]">در صف بررسی</span>
+          </div>
+        )}
+
+        {/* Tabs: نمای کلی, خروجی, فعالیت, جزئیات فنی */}
+        <div className="pt-2">
+          <Tabs
+            activeTab={activeTab}
+            onChange={(tabId) => setActiveTab(tabId as DetailTab)}
+            tabs={[
+              { id: 'overview', label: 'نمای کلی' },
+              {
+                id: 'output',
+                label: 'خروجی',
+                count: task.deliverables ? 1 : undefined,
+              },
+              { id: 'activity', label: 'فعالیت' },
+              { id: 'technical', label: 'جزئیات فنی' },
+            ]}
+          />
+        </div>
       </div>
 
-      {/* Actionable Banner: Waiting for customer input */}
-      {task.status === 'waiting_for_customer' && task.waitingData && (
-        <div
-          style={getStaggerStyle(2)}
-          className="animate-nervel-enter py-4 px-4 rounded border border-[#27272A] bg-transparent text-sm space-y-3.5"
-        >
-          <div className="flex items-center justify-between text-[#F4F4F5]">
-            <div className="flex items-center gap-2 font-medium">
-              <AlertTriangle className="h-4 w-4 text-[#F59E0B] shrink-0" />
-              <span>ورکر کانتینر برای ادامه به راهنمایی شما نیاز دارد</span>
+      {/* =========================================================================
+          TAB 1: OVERVIEW (نمای کلی - Flattened Document Layout)
+          ========================================================================= */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6 w-full animate-nervel-enter">
+          
+          {/* Section 1: Current State & Most Recent Event */}
+          <div className="space-y-2 pb-6 border-b border-[#18181C]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-[#F4F4F5]">
+                وضعیت لحظه‌ای تسک
+              </h2>
+              <StatusIndicator status={task.status} size="sm" />
             </div>
-            <span className="text-xs text-[#71717A]">
-              مهلت پاسخگویی: {task.waitingData.expiresAt}
-            </span>
-          </div>
 
-          <div className="text-base text-[#F4F4F5] leading-relaxed pr-6">
-            {task.waitingData.question}
-          </div>
+            <p className="text-sm text-[#D4D4D8] leading-relaxed">
+              {task.status === 'completed'
+                ? 'اجرای تسک با موفقیت پایان یافته، تمام تست‌های واحد پاس شده و پچ تغییرات نهایی ایجاد شد.'
+                : task.status === 'failed'
+                ? 'اجرای تسک به دلیل خطای غیرقابل جبران در مرحله کامپایل یا تست متوقف شد. هزینه کارکرد واقعی محاسبه و باقیمانده سقف رزرو به کیف پول بازگردانده شده است.'
+                : task.status === 'cancelled'
+                ? 'اجرای تسک متوقف گردید و مبالغ مازاد رزرو طبق سیاست شفاف آزادسازی گردید.'
+                : task.status === 'running'
+                ? 'ورکر کانتینری ایزوله در حال اعمال تغییرات روی فایل‌ها و تدوین تست‌های خودکار است.'
+                : task.status === 'validating'
+                ? 'کدنویسی به پایان رسیده و اسکریپت‌های سنجش بیلد، تایپ‌اسکریپت و تست‌های واحد در حال اجرا هستند.'
+                : task.status === 'waiting_for_customer'
+                ? 'اجرا موقتاً متوقف شده و منتظر اقدام و پاسخ شما به استعلام فنی ورکر است.'
+                : task.status === 'reassigning'
+                ? 'پایش ورکر با قطعی مواجه شد؛ در انتظار تایید انتقال به ورکر جایگزین.'
+                : 'تسک در صف زمان‌بندی شبکه قرار دارد و به‌زودی به نخستین ورکر آماده واگذار می‌شود.'}
+            </p>
 
-          <div className="flex gap-2.5 pt-1 pr-6">
-            <input
-              type="text"
-              placeholder="پاسخ یا تصمیم فنی خود را بنویسید..."
-              value={customerAnswer}
-              onChange={(e) => setCustomerAnswer(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSendAnswer();
-              }}
-              className="flex-1 rounded border border-[#27272A] bg-transparent px-3.5 py-2 text-sm text-[#F4F4F5] placeholder-[#71717A] focus:border-[#7C3AED] focus:outline-none"
-            />
-            <button
-              onClick={handleSendAnswer}
-              className="flex items-center gap-2 rounded bg-[#7C3AED] hover:bg-[#8B5CF6] px-4 py-2 text-sm font-medium text-white transition-colors"
-            >
-              <Send className="h-4 w-4" />
-              <span>ارسال</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Actionable Banner: Worker Reassignment */}
-      {task.status === 'reassigning' && task.reassignData && (
-        <div
-          style={getStaggerStyle(2)}
-          className="animate-nervel-enter py-4 px-4 rounded border border-[#27272A] bg-transparent text-sm space-y-3"
-        >
-          <div className="flex items-center justify-between text-[#F4F4F5]">
-            <div className="flex items-center gap-2 font-medium">
-              <RefreshCw className="h-4 w-4 text-[#71717A] shrink-0 animate-spin" />
-              <span>ورکر فعلی پاسخگو نیست (عدم دریافت ۳ ضربان وضعیت)</span>
-            </div>
-            <span className="text-xs text-[#71717A] tabular-nums">
-              انتقال خودکار تا {toPersianDigits(task.reassignData.secondsLeftBeforeAuto)} ثانیه دیگر
-            </span>
-          </div>
-
-          <p className="text-sm text-[#A1A1AA] leading-relaxed pr-6">
-            {task.reassignData.reason}. اسنپ‌شات کانتینر ذخیره شده است.
-          </p>
-
-          <div className="flex items-center justify-end gap-3 pt-1">
-            <button
-              onClick={handleManualReassign}
-              className="rounded bg-[#7C3AED] hover:bg-[#8B5CF6] px-4 py-2 text-sm font-medium text-white transition-colors"
-            >
-              انتقال فوری به ورکر جدید ←
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Deliverables Banner (When Task is Completed) */}
-      {task.status === 'completed' && task.deliverables && (
-        <div
-          style={getStaggerStyle(2)}
-          className="animate-nervel-enter py-4 px-4 rounded border border-[#27272A] bg-transparent text-sm space-y-3.5"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[#F4F4F5] font-medium">
-              <CheckCircle2 className="h-4.5 w-4.5 text-[#10B981] shrink-0" />
-              <span>خروجی نهایی مهندسی با موفقیت تولید شد و از تمام آزمون‌های QA گذشت</span>
-            </div>
-            <span className="text-xs sm:text-sm text-[#71717A] tabular-nums">
-              تسویه مصرف واقعی: {formatToman(task.actualCost || task.estimatedCost)}
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-5 text-sm pt-1 pr-6">
-            {task.deliverables.prUrl && (
-              <a
-                href={task.deliverables.prUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 text-[#D4D4D8] hover:text-[#F4F4F5] hover:underline"
-                dir="ltr"
-              >
-                <GitPullRequest className="h-4 w-4 text-[#71717A]" />
-                <span>GitHub Pull Request</span>
-                <ExternalLink className="h-3.5 w-3.5 text-[#71717A]" />
-              </a>
+            {/* Failure Detail Alert if failed */}
+            {task.status === 'failed' && (
+              <div className="p-4 rounded-lg bg-[#140A0A] border border-[#EF4444]/30 space-y-2 mt-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-[#EF4444]">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>خطای عدم موفقیت در تکمیل تسک (Task Failed)</span>
+                </div>
+                <p className="text-sm text-[#D4D4D8] leading-relaxed">
+                  {task.qaReport?.testSummary || 'اجرای کانتینر تسک پس از تلاش‌های خودکار رفع خطا با شکست مواجه شد.'}
+                </p>
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-[#71717A]">
+                  <span>هزینه کارکرد مصرف‌شده تا لحظه خطا: <strong className="text-[#F4F4F5] tabular-nums font-latin">{formatToman(task.actualCost || 0)}</strong></span>
+                  <span>·</span>
+                  <span>مازاد اعتبار رزرو مستردشده به کیف پول: <strong className="text-[#10B981] tabular-nums font-latin">{formatToman(Math.max(0, task.reservedCap - (task.actualCost || 0)))}</strong></span>
+                </div>
+              </div>
             )}
 
-            {task.deliverables.patchFilename && (
-              <button
-                onClick={() => alert(`دانلود پچ گیت: ${task.deliverables?.patchFilename}`)}
-                className="flex items-center gap-2 text-[#D4D4D8] hover:text-[#F4F4F5] hover:underline"
-                dir="ltr"
-              >
-                <FileCode className="h-4 w-4 text-[#71717A]" />
-                <span>{task.deliverables.patchFilename}</span>
-                <Download className="h-3.5 w-3.5 text-[#71717A]" />
-              </button>
-            )}
-
-            {task.deliverables.zipFilename && (
-              <button
-                onClick={() => alert(`دانلود سورس کامل: ${task.deliverables?.zipFilename}`)}
-                className="flex items-center gap-2 text-[#D4D4D8] hover:text-[#F4F4F5] hover:underline"
-                dir="ltr"
-              >
-                <Download className="h-4 w-4 text-[#71717A]" />
-                <span>{task.deliverables.zipFilename}</span>
-              </button>
+            {task.logs.length > 0 && (
+              <div className="pt-1 flex items-center gap-2 text-xs text-[#71717A]">
+                <Clock className="h-3.5 w-3.5 text-[#52525B]" />
+                <span>آخرین رخداد: {task.logs[task.logs.length - 1].message}</span>
+              </div>
             )}
           </div>
-        </div>
-      )}
 
-      {/* Main Content Workspace: Tabs Strip */}
-      <div style={getStaggerStyle(3)} className="animate-nervel-enter space-y-5">
-        <div className="border-b border-[#17171A] flex items-center justify-between text-sm">
-          <div className="flex items-center gap-8">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`pb-3 transition-colors border-b-2 font-medium ${
-                activeTab === 'overview'
-                  ? 'border-[#7C3AED] text-[#F4F4F5]'
-                  : 'border-transparent text-[#71717A] hover:text-[#A1A1AA]'
-              }`}
-            >
-              شرح کار و ارزیابی QA
-            </button>
-            <button
-              onClick={() => setActiveTab('logs')}
-              className={`pb-3 transition-colors border-b-2 flex items-center gap-2 font-medium ${
-                activeTab === 'logs'
-                  ? 'border-[#7C3AED] text-[#F4F4F5]'
-                  : 'border-transparent text-[#71717A] hover:text-[#A1A1AA]'
-              }`}
-            >
-              <Terminal className="h-4 w-4" />
-              <span>لاگ‌های زنده ورکر ({toPersianDigits(task.logs?.length || 0)})</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('diff')}
-              className={`pb-3 transition-colors border-b-2 flex items-center gap-2 font-medium ${
-                activeTab === 'diff'
-                  ? 'border-[#7C3AED] text-[#F4F4F5]'
-                  : 'border-transparent text-[#71717A] hover:text-[#A1A1AA]'
-              }`}
-            >
-              <FileCode className="h-4 w-4" />
-              <span>بررسی تغییرات کد (Diff)</span>
-            </button>
+          {/* Section 2: Request Summary & Acceptance Criteria */}
+          <div className="space-y-3 pb-6 border-b border-[#18181C]">
+            <h2 className="text-base font-bold text-[#F4F4F5]">
+              شرح درخواست و معیارهای پذیرش
+            </h2>
+
+            <p className="text-sm text-[#A1A1AA] leading-relaxed whitespace-pre-line">
+              {task.description}
+            </p>
+
+            {task.acceptanceCriteria.length > 0 && (
+              <div className="space-y-1.5 pt-2">
+                <span className="text-xs font-medium text-[#71717A] block">
+                  معیارهای ارزیابی نهایی (QA):
+                </span>
+                <ul className="space-y-1 text-xs text-[#D4D4D8] pr-2">
+                  {task.acceptanceCriteria.map((crit, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-[#7C3AED] font-bold">•</span>
+                      <span>{crit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
-          <div className="text-xs text-[#71717A] pb-3">
-            ورکر ایزوله: {task.workerId || 'در صف تخصیص'}
-          </div>
-        </div>
+          {/* Section 3: Execution & Cost Metric Row (Clean typography + dividers) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-2 pb-6 border-b border-[#18181C] divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-[#1A1A1E]">
+            <div className="space-y-0.5 pt-2 sm:pt-0">
+              <span className="text-xs text-[#71717A] block">مدل پردازشی:</span>
+              <span className="text-base font-medium text-[#F4F4F5] font-latin block" dir="ltr">
+                {task.modelName}
+              </span>
+              <span className="text-xs text-[#52525B] block">موتور تخصیص‌یافته به تسک</span>
+            </div>
 
-        {/* Tab 1: Overview and QA Report - Flat sections */}
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left 2 Cols: Description & Criteria */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="space-y-2.5">
-                <h3 className="text-[17px] sm:text-lg font-semibold text-[#F4F4F5]">
-                  شرح تسک و نیازمندی‌ها
-                </h3>
-                <p className="text-base text-[#D4D4D8] leading-relaxed whitespace-pre-line">
-                  {task.description}
+            <div className="space-y-0.5 pt-3 sm:pt-0 sm:pr-6">
+              <span className="text-xs text-[#71717A] block">سقف اعتبار رزرو:</span>
+              <span className="text-base font-medium text-[#F4F4F5] tabular-nums block">
+                {formatToman(task.reservedCap)}
+              </span>
+              <span className="text-xs text-[#52525B] block">مسدودی موقت حساب</span>
+            </div>
+
+            <div className="space-y-0.5 pt-3 sm:pt-0 sm:pr-6">
+              <span className="text-xs text-[#71717A] block">هزینه محاسبه‌شده:</span>
+              <span className="text-base font-medium text-[#F4F4F5] tabular-nums block">
+                {task.actualCost ? formatToman(task.actualCost) : 'بر مبنای مصرف واقعی توکن'}
+              </span>
+              <span className="text-xs text-[#52525B] block">
+                {task.actualCost ? 'تسویه شده' : 'پس از پایان محاسبه می‌شود'}
+              </span>
+            </div>
+          </div>
+
+          {/* Section 4: Output Summary if ready */}
+          {task.deliverables && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
+                  <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
+                  <span>خروجی نهایی آماده است</span>
+                </div>
+                <p className="text-xs text-[#71717A]">
+                  تغییرات کد، فایل Patch و آرشیو کامل در دسترس قرار گرفت.
                 </p>
               </div>
 
-              <div className="space-y-2.5 pt-5 border-t border-[#17171A]">
-                <h3 className="text-[17px] sm:text-lg font-semibold text-[#F4F4F5]">
-                  معیارهای پذیرش و تست (QA Criteria)
-                </h3>
-                <div className="space-y-2">
-                  {task.acceptanceCriteria.map((c, i) => (
-                    <div key={i} className="flex items-start gap-2.5 text-base text-[#D4D4D8]">
-                      <span className="text-[#7C3AED]">•</span>
-                      <span>{c}</span>
-                    </div>
-                  ))}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setActiveTab('output')}
+                leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
+              >
+                مشاهده و دریافت خروجی
+              </Button>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 2: OUTPUT (خروجی)
+          Show:
+          - Deliverables: Pull Request, Patch, ZIP
+          - Tests & QA Result
+          - Changed Files & Code Diff
+          - If PR fails: show "PR creation failed" and "Retry" (platform retry without new cost)
+          ========================================================================= */}
+      {activeTab === 'output' && (
+        <div className="space-y-6 w-full animate-nervel-enter">
+          
+          {/* Deliverables Section */}
+          <div className="border border-[#18181B] rounded-lg p-5 bg-[#08080A] space-y-4">
+            <h2 className="text-lg font-bold text-[#F4F4F5]">
+              بسته‌های تحویلی و خروجی کد
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Pull Request Card */}
+              <div className="border border-[#222226] rounded-md p-4 bg-[#0C0C0F] space-y-2 flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
+                    <GitPullRequest className="h-4 w-4 text-[#7C3AED]" />
+                    <span>Pull Request</span>
+                  </div>
+                  {task.deliverables?.prFailed && (
+                    <span className="text-xs text-[#EF4444]">ناموفق</span>
+                  )}
                 </div>
+
+                {task.deliverables?.prFailed ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-[#EF4444]">
+                      ایجاد خودکار PR با خطای دسترسی گیت‌هاب مواجه شد.
+                    </p>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleRetryPr}
+                      isLoading={isRetryingPr}
+                      className="w-full"
+                    >
+                      تلاش مجدد ایجاد PR
+                    </Button>
+                  </div>
+                ) : task.deliverables?.prUrl ? (
+                  <div className="space-y-2">
+                    <span className="text-xs text-[#A1A1AA] font-latin truncate block" dir="ltr">
+                      {task.deliverables.prUrl}
+                    </span>
+                    <a
+                      href={task.deliverables.prUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 w-full h-8 text-xs font-medium rounded bg-[#18181D] hover:bg-[#222228] text-[#F4F4F5] transition-colors"
+                    >
+                      <span>مشاهده در GitHub</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                ) : (
+                  <span className="text-xs text-[#71717A]">
+                    {task.status === 'completed' ? 'ایجاد نشد' : 'پس از تکمیل ساخته می‌شود'}
+                  </span>
+                )}
               </div>
 
-              {/* QA Report Summary if available */}
-              {task.qaReport && (
-                <div className="space-y-3.5 pt-5 border-t border-[#17171A]">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[17px] sm:text-lg font-semibold text-[#F4F4F5]">
-                      گزارش ارزیابی کیفی (QA Layer)
-                    </h3>
-                    <span className="inline-flex items-center gap-1.5 text-[#A1A1AA] font-medium text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
-                      تمام آزمون‌ها پاس شدند
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 py-2">
-                    <div>
-                      <span className="text-sm text-[#71717A] block">کامپایل / بیلد:</span>
-                      <span className="text-sm sm:text-base text-[#F4F4F5] font-medium mt-1 block">PASSED (0 Errors)</span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-[#71717A] block">تست‌های واحد:</span>
-                      <span className="text-sm sm:text-base text-[#F4F4F5] font-medium mt-1 block tabular-nums">24 / 24 PASSED</span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-[#71717A] block">اعتبارسنجی Linter:</span>
-                      <span className="text-sm sm:text-base text-[#F4F4F5] font-medium mt-1 block">CLEAN (0 Warnings)</span>
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-[#71717A] leading-relaxed">{task.qaReport.testSummary}</p>
+              {/* Patch File */}
+              <div className="border border-[#222226] rounded-md p-4 bg-[#0C0C0F] space-y-2 flex flex-col justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
+                  <FileCode className="h-4 w-4 text-[#7C3AED]" />
+                  <span>فایل Git Patch</span>
                 </div>
-              )}
+                <span className="text-xs text-[#71717A] font-latin truncate" dir="ltr">
+                  {task.deliverables?.patchFilename || `patch_${task.id}.diff`}
+                </span>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-1.5 w-full h-8 text-xs font-medium rounded bg-[#18181D] hover:bg-[#222228] text-[#F4F4F5] transition-colors cursor-pointer"
+                >
+                  <Download className="h-3 w-3" />
+                  <span>دانلود فایل Patch</span>
+                </button>
+              </div>
+
+              {/* ZIP Archive */}
+              <div className="border border-[#222226] rounded-md p-4 bg-[#0C0C0F] space-y-2 flex flex-col justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
+                  <FileArchive className="h-4 w-4 text-[#7C3AED]" />
+                  <span>آرشیو کامل ZIP</span>
+                </div>
+                <span className="text-xs text-[#71717A] font-latin truncate" dir="ltr">
+                  {task.deliverables?.zipFilename || 'deliverables.zip'}
+                </span>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-1.5 w-full h-8 text-xs font-medium rounded bg-[#18181D] hover:bg-[#222228] text-[#F4F4F5] transition-colors cursor-pointer"
+                >
+                  <Download className="h-3 w-3" />
+                  <span>دانلود بسته ZIP</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* QA & Verification Results */}
+          <div className="border border-[#18181B] rounded-lg p-5 bg-[#08080A] space-y-3">
+            <h2 className="text-lg font-bold text-[#F4F4F5]">
+              نتایج ارزیابی کیفی و اعتبارسنجی خودکار (QA)
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] flex items-center justify-between">
+                <span className="text-[#71717A]">کامپایل و بیلد:</span>
+                {task.qaReport?.buildStatus === 'failed' ? (
+                  <span className="text-[#EF4444] font-medium flex items-center gap-1">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    خطا در کامپایل
+                  </span>
+                ) : (
+                  <span className="text-[#10B981] font-medium flex items-center gap-1">
+                    <Check className="h-3.5 w-3.5" />
+                    تاییدشده
+                  </span>
+                )}
+              </div>
+
+              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] flex items-center justify-between">
+                <span className="text-[#71717A]">تست‌های خودکار:</span>
+                {task.qaReport?.testStatus === 'failed' ? (
+                  <span className="text-[#EF4444] font-medium flex items-center gap-1">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    شکست تست
+                  </span>
+                ) : (
+                  <span className="text-[#10B981] font-medium flex items-center gap-1">
+                    <Check className="h-3.5 w-3.5" />
+                    پاس شدند
+                  </span>
+                )}
+              </div>
+
+              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] flex items-center justify-between">
+                <span className="text-[#71717A]">بررسی لینتر و تایپ‌ها:</span>
+                {task.qaReport?.lintStatus === 'failed' ? (
+                  <span className="text-[#EF4444] font-medium flex items-center gap-1">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    خطای سینتکس
+                  </span>
+                ) : (
+                  <span className="text-[#10B981] font-medium flex items-center gap-1">
+                    <Check className="h-3.5 w-3.5" />
+                    بدون خطا
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Right 1 Col: Financial & Technical Metadata */}
-            <div className="space-y-6">
-              {/* Financial Status */}
-              <div className="space-y-2.5">
-                <h3 className="text-[17px] sm:text-lg font-semibold text-[#F4F4F5]">
-                  صورت‌وضعیت مالی تسک
-                </h3>
+            {task.qaReport?.testSummary && (
+              <p className="text-xs text-[#A1A1AA] pt-1">
+                {task.qaReport.testSummary}
+              </p>
+            )}
+          </div>
 
-                <div className="space-y-2.5 divide-y divide-[#17171A] text-sm">
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-[#71717A]">سقف رزرو اولیه:</span>
-                    <span className="tabular-nums font-semibold text-[#F4F4F5] text-base">{formatToman(task.reservedCap)}</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-2.5">
-                    <span className="text-[#71717A]">هزینه تخمینی:</span>
-                    <span className="tabular-nums text-[#A1A1AA] text-base">{formatToman(task.estimatedCost)}</span>
-                  </div>
-                  {task.actualCost && (
-                    <div className="flex items-center justify-between pt-2.5">
-                      <span className="text-[#71717A]">تسویه نهایی واقعی:</span>
-                      <span className="tabular-nums font-bold text-base text-[#F4F4F5]">{formatToman(task.actualCost)}</span>
-                    </div>
-                  )}
-                  {task.actualCost && task.reservedCap > task.actualCost && (
-                    <div className="flex items-center justify-between pt-2.5">
-                      <span className="text-[#71717A]">مازاد عودت‌یافته:</span>
-                      <span className="tabular-nums font-semibold text-base text-[#D4D4D8]">
-                        {formatToman(task.reservedCap - task.actualCost)}
+          {/* Changed Files & Code Diff */}
+          <div className="space-y-3">
+            <h2 className="text-lg font-bold text-[#F4F4F5]">
+              فایل‌های تغییر‌یافته ({toPersianDigits(task.qaReport?.changedFiles.length || 2)})
+            </h2>
+
+            <CodeDiffViewer
+              files={
+                task.qaReport?.changedFiles || [
+                  {
+                    filename: 'src/gateways/payment.service.ts',
+                    additions: 42,
+                    deletions: 4,
+                    status: 'modified',
+                    diffContent: `@@ -12,4 +12,42 @@ export class PaymentService {
+-  async verifyTransaction(txId: string): Promise<boolean> {
+-    return true;
+-  }
++  async verifyTransaction(txId: string, signature: string): Promise<VerificationResult> {
++    const computedSig = createHmac('sha256', this.secretKey).update(txId).digest('hex');
++    if (computedSig !== signature) {
++      throw new UnauthorizedException('Digital signature mismatch');
++    }
++    return this.zarinpalClient.verify(txId);
++  }`,
+                  },
+                  {
+                    filename: 'tests/payment.spec.ts',
+                    additions: 36,
+                    deletions: 0,
+                    status: 'added',
+                  },
+                ]
+              }
+            />
+          </div>
+
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 3: ACTIVITY (فعالیت)
+          Human-readable execution timeline (Not raw logs!)
+          ========================================================================= */}
+      {activeTab === 'activity' && (
+        <div className="w-full space-y-6 animate-nervel-enter">
+          <div className="border border-[#18181B] rounded-lg p-6 bg-[#08080A]">
+            <h2 className="text-lg font-bold text-[#F4F4F5] mb-6">
+              خط زمانی مراحل اجرای تسک
+            </h2>
+
+            <div className="relative pl-2 pr-6 border-r-2 border-[#1E1E24] space-y-8">
+              {activityMilestones.map((ms, idx) => (
+                <div key={ms.id} className="relative">
+                  {/* Indicator Dot */}
+                  <div
+                    className={`absolute -right-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 ${
+                      ms.done
+                        ? 'bg-[#10B981] border-[#08080A]'
+                        : 'bg-[#222226] border-[#08080A]'
+                    }`}
+                  />
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h3
+                        className={`text-base font-medium ${
+                          ms.done ? 'text-[#F4F4F5]' : 'text-[#71717A]'
+                        }`}
+                      >
+                        {ms.title}
+                      </h3>
+                      <span className="text-xs text-[#52525B] tabular-nums">
+                        {ms.time}
                       </span>
                     </div>
-                  )}
+
+                    <p className="text-xs sm:text-[13px] text-[#A1A1AA] leading-relaxed">
+                      {ms.desc}
+                    </p>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 4: TECHNICAL DETAILS (جزئیات فنی)
+          For power users:
+          - Model & Engine
+          - Worker info
+          - Token usage
+          - Scheduler / logs
+          - Repository metadata
+          ========================================================================= */}
+      {activeTab === 'technical' && (
+        <div className="w-full space-y-6 animate-nervel-enter">
+          
+          {/* Technical Metadata Grid */}
+          <div className="border border-[#18181B] rounded-lg p-5 bg-[#08080A] space-y-4">
+            <h2 className="text-lg font-bold text-[#F4F4F5] flex items-center gap-2">
+              <Cpu className="h-4 w-4 text-[#7C3AED]" />
+              <span>مشخصات فنی و زیرساختی اجرا</span>
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] space-y-1">
+                <span className="text-[#71717A] block">شناسه ورکر پردازشی:</span>
+                <span className="text-[#F4F4F5] font-medium font-latin block" dir="ltr">
+                  {task.workerId || 'در انتظار تخصیص'}
+                </span>
               </div>
 
-              {/* Technical Execution Metadata */}
-              <div className="space-y-2.5 pt-5 border-t border-[#17171A]">
-                <h3 className="text-[17px] sm:text-lg font-semibold text-[#F4F4F5]">
-                  مشخصات فنی و ورکر
-                </h3>
+              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] space-y-1">
+                <span className="text-[#71717A] block">هاست‌نیم گره ورکر:</span>
+                <span className="text-[#F4F4F5] font-medium font-latin block" dir="ltr">
+                  {task.workerHostname || 'node-worker-pending'}
+                </span>
+              </div>
 
-                <div className="space-y-2.5 text-sm">
-                  <div>
-                    <span className="text-[#71717A] block">شناسه ورکر تخصیص‌یافته:</span>
-                    <span className="text-[#F4F4F5] font-medium" dir="ltr">
-                      {task.workerId || 'هنوز تخصیص داده نشده'}
+              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] space-y-1">
+                <span className="text-[#71717A] block">پلن پردازشی ورکر:</span>
+                <span className="text-[#F4F4F5] font-medium block">
+                  {task.workerPlan || 'Standard Dedicated Sandbox'}
+                </span>
+              </div>
+
+              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] space-y-1">
+                <span className="text-[#71717A] block">استراتژی تخصیص مجدد:</span>
+                <span className="text-[#F4F4F5] font-medium block">
+                  استعلام و انتقال خودکار
+                </span>
+              </div>
+            </div>
+
+            {/* Token Usage Stats */}
+            {task.tokenStats && (
+              <div className="pt-3 border-t border-[#141418] space-y-2">
+                <span className="text-xs font-medium text-[#71717A] block">
+                  آمار مصرف توکن‌ها:
+                </span>
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div className="p-2.5 rounded bg-[#0C0C0F] border border-[#222226]">
+                    <span className="text-[#71717A] font-latin block">Input Tokens</span>
+                    <span className="text-[#F4F4F5] font-medium tabular-nums mt-0.5 block">
+                      {toPersianDigits(new Intl.NumberFormat('en-US').format(task.tokenStats.inputTokens))}
                     </span>
                   </div>
 
-                  <div>
-                    <span className="text-[#71717A] block">مدل استنتاج کانتینر:</span>
-                    <span className="text-[#F4F4F5] font-medium" dir="ltr">
-                      {task.modelName}
+                  <div className="p-2.5 rounded bg-[#0C0C0F] border border-[#222226]">
+                    <span className="text-[#71717A] font-latin block">Cached Context</span>
+                    <span className="text-[#F4F4F5] font-medium tabular-nums mt-0.5 block">
+                      {toPersianDigits(new Intl.NumberFormat('en-US').format(task.tokenStats.cachedTokens))}
                     </span>
                   </div>
 
-                  {task.tokenStats && (
-                    <div className="pt-3 border-t border-[#17171A] space-y-1.5">
-                      <span className="text-xs text-[#71717A] block">مصرف توکن‌ها:</span>
-                      <div className="flex justify-between text-[#A1A1AA] tabular-nums text-xs">
-                        <span>Input:</span>
-                        <span>{toPersianDigits(task.tokenStats.inputTokens)}</span>
-                      </div>
-                      <div className="flex justify-between text-[#A1A1AA] tabular-nums text-xs">
-                        <span>Cached:</span>
-                        <span>{toPersianDigits(task.tokenStats.cachedTokens)}</span>
-                      </div>
-                      <div className="flex justify-between text-[#A1A1AA] tabular-nums text-xs">
-                        <span>Output:</span>
-                        <span>{toPersianDigits(task.tokenStats.outputTokens)}</span>
-                      </div>
-                    </div>
-                  )}
+                  <div className="p-2.5 rounded bg-[#0C0C0F] border border-[#222226]">
+                    <span className="text-[#71717A] font-latin block">Output Tokens</span>
+                    <span className="text-[#F4F4F5] font-medium tabular-nums mt-0.5 block">
+                      {toPersianDigits(new Intl.NumberFormat('en-US').format(task.tokenStats.outputTokens))}
+                    </span>
+                  </div>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Raw Execution Logs Console */}
+          <div className="border border-[#18181B] rounded-lg overflow-hidden bg-[#050507]">
+            <div className="px-4 py-3 bg-[#0A0A0E] border-b border-[#18181B] flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
+                <Terminal className="h-4 w-4 text-[#7C3AED]" />
+                <span>لاگ‌های خام ورکر و کانتینر ایزوله</span>
+              </div>
+              <span className="text-xs text-[#71717A] tabular-nums">
+                {task.logs.length} رکورد
+              </span>
+            </div>
+
+            <div className="p-4 max-h-72 overflow-y-auto font-code text-xs space-y-1.5" dir="ltr">
+              {task.logs.map((log) => (
+                <div key={log.id} className="flex items-start gap-3 leading-relaxed">
+                  <span className="text-[#52525B] select-none shrink-0 tabular-nums">
+                    [{log.timestamp}]
+                  </span>
+                  <span
+                    className={`font-medium shrink-0 uppercase text-xs px-1 rounded ${
+                      log.level === 'warn'
+                        ? 'text-[#F59E0B] bg-[#F59E0B]/10'
+                        : log.level === 'step'
+                        ? 'text-[#7C3AED] bg-[#7C3AED]/10'
+                        : log.level === 'success'
+                        ? 'text-[#10B981] bg-[#10B981]/10'
+                        : 'text-[#71717A] bg-[#17171C]'
+                    }`}
+                  >
+                    {log.level}
+                  </span>
+                  <span className="text-[#A1A1AA] break-all">{log.message}</span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
 
-        {/* Tab 2: Logs (GENUINE terminal output - uses font-code!) */}
-        {activeTab === 'logs' && (
-          <div className="border border-[#17171A] rounded overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#17171A] bg-[#060607] flex items-center justify-between text-sm text-[#71717A]">
-              <span>خروجی استاندارد کانتینر ایزوله</span>
-              <span>زمان رسمی ورکر</span>
+          {/* Simulator Bar (Protected behind development-only flag) */}
+          {Boolean(import.meta.env.DEV && typeof window !== 'undefined' && (window as unknown as { __NERVEL_DEV_SIMULATOR__?: boolean }).__NERVEL_DEV_SIMULATOR__) && (
+            <div className="border border-[#1E1E24] rounded-lg p-4 bg-[#08080A] space-y-2">
+              <span className="text-xs text-[#71717A] block">
+                شبیه‌ساز وضعیت برای تست سناریوها (حالت توسعه):
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { st: 'queued', label: 'صف' },
+                  { st: 'running', label: 'در حال اجرا' },
+                  { st: 'waiting_for_customer', label: 'منتظر شما' },
+                  { st: 'reassigning', label: 'انتقال ورکر' },
+                  { st: 'validating', label: 'بررسی QA' },
+                  { st: 'completed', label: 'تکمیل شد' },
+                  { st: 'failed', label: 'ناموفق' },
+                ].map((sim) => (
+                  <button
+                    key={sim.st}
+                    type="button"
+                    onClick={() => simulateStateTransition(task.id, sim.st as TaskStatus)}
+                    className="px-2.5 py-1 text-xs rounded bg-[#141418] hover:bg-[#1E1E24] border border-[#27272A] text-[#D4D4D8] transition-colors cursor-pointer"
+                  >
+                    {sim.label}
+                  </button>
+                ))}
+              </div>
             </div>
+          )}
 
-            <div className="p-5 font-code text-[13px] space-y-2.5 max-h-96 overflow-y-auto bg-[#020202] leading-relaxed" dir="ltr">
-              {task.logs && task.logs.length > 0 ? (
-                task.logs.map((log) => {
-                  let colorClass = 'text-[#D4D4D8]';
-                  if (log.level === 'warn') colorClass = 'text-[#F59E0B]';
-                  if (log.level === 'success') colorClass = 'text-[#10B981]';
-                  if (log.level === 'step') colorClass = 'text-[#818CF8]';
+        </div>
+      )}
 
-                  return (
-                    <div key={log.id} className="flex items-start gap-3 py-0.5">
-                      <span className="text-[#52525B] shrink-0 select-none">[{log.timestamp}]</span>
-                      <span className={`shrink-0 uppercase text-xs select-none ${colorClass}`}>
-                        {log.level}:
-                      </span>
-                      <span className={colorClass}>{log.message}</span>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-[#52525B]">در انتظار لاگ‌های اولیه...</div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 3: Diff Viewer */}
-        {activeTab === 'diff' && (
-          <div className="space-y-4">
-            <CodeDiffViewer files={task.qaReport?.changedFiles || []} />
-          </div>
-        )}
-      </div>
-
-      {/* Technical Dispute Modal */}
+      {/* Dispute Modal Dialog */}
       {isDisputeOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="w-full max-w-lg border border-[#17171A] bg-[#0A0A0C] rounded p-6 space-y-4 text-sm">
-            <div className="flex items-center justify-between border-b border-[#17171A] pb-3">
-              <span className="font-bold text-base text-[#F4F4F5]">ثبت اعتراض فنی به خروجی</span>
-              <button onClick={() => setIsDisputeOpen(false)} className="text-[#71717A] hover:text-white p-1">
+          <div
+            className="w-full max-w-lg rounded-lg border border-[#222226] bg-[#0A0A0D] p-6 text-right animate-nervel-enter space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#18181B]">
+              <div className="flex items-center gap-2">
+                <Flag className="h-5 w-5 text-[#F59E0B]" />
+                <h3 className="text-base font-bold text-[#F4F4F5]">ثبت اعتراض فنی به خروجی تسک</h3>
+              </div>
+              <button
+                onClick={() => setIsDisputeOpen(false)}
+                className="text-[#71717A] hover:text-[#F4F4F5] p-1"
+              >
                 ✕
               </button>
             </div>
 
-            {disputeSubmitted ? (
-              <div className="p-4 text-center space-y-2 text-[#34D399]">
-                <CheckCircle2 className="mx-auto h-7 w-7" />
-                <p className="text-base font-medium">اعتراض فنی با شماره پرونده DSP-9218 ثبت شد. بازبینی خودکار فعال شد.</p>
+            <p className="text-xs text-[#A1A1AA] leading-relaxed">
+              در صورتی که خروجی ارائه‌شده با معیارهای پذیرش همخوانی ندارد، دلایل فنی خود را وارد کنید تا مستقیماً توسط کارشناسان ارشد ارزیابی گردد.
+            </p>
+
+            <form onSubmit={handleDisputeSubmit} className="space-y-4">
+              <textarea
+                rows={4}
+                value={disputeReason}
+                onChange={(e) => setDisputeReason(e.target.value)}
+                placeholder="توضیح دلایل عدم انطباق با نیازمندی‌ها..."
+                className="w-full bg-[#08080B] border border-[#27272A] rounded-md p-3 text-sm text-[#F4F4F5] focus:outline-none focus:border-[#7C3AED]"
+                autoFocus
+              />
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsDisputeOpen(false)}
+                >
+                  انصراف
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={!disputeReason.trim()}
+                >
+                  ثبت اعتراض جهت داوری
+                </Button>
               </div>
-            ) : (
-              <form onSubmit={handleDisputeSubmit} className="space-y-4">
-                <p className="text-[#A1A1AA] leading-relaxed text-sm">
-                  در صورتی که کدهای تولیدشده با معیارهای پذیرش ثبت‌شده مطابقت ندارد، دلایل فنی را ثبت کنید تا بدون هزینه مجدد به صف اصلاح بازگردد.
-                </p>
-
-                <textarea
-                  rows={4}
-                  placeholder="علت عدم انطباق را شرح دهید..."
-                  value={disputeReason}
-                  onChange={(e) => setDisputeReason(e.target.value)}
-                  required
-                  className="w-full rounded border border-[#27272A] bg-transparent p-3 text-sm text-[#F4F4F5] focus:border-[#7C3AED] focus:outline-none"
-                />
-
-                <div className="flex justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsDisputeOpen(false)}
-                    className="px-4 py-2 text-sm text-[#71717A] hover:text-white"
-                  >
-                    انصراف
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded bg-[#7C3AED] text-sm font-medium text-white hover:bg-[#8B5CF6]"
-                  >
-                    ثبت اعتراض فنی
-                  </button>
-                </div>
-              </form>
-            )}
+            </form>
           </div>
         </div>
       )}
