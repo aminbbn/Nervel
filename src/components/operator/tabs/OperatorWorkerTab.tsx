@@ -113,9 +113,9 @@ WantedBy=multi-user.target`;
         </div>
       </div>
 
-      {/* Liveness Logic & Heartbeat Monitoring Grid */}
-      <div className="p-5 rounded-lg bg-[#09090C] border border-[#18181C] space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#141418]">
+      {/* Liveness Logic & Heartbeat Monitoring - Frameless Section */}
+      <section className="space-y-4 pb-8 border-b border-[#18181C]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
           <div className="flex items-center gap-2.5">
             <Activity className="h-4.5 w-4.5 text-[#7C3AED]" />
             <h3 className="text-base font-bold text-[#F4F4F5]">پایش ضربان و منطق لایونس (Liveness Health)</h3>
@@ -127,9 +127,9 @@ WantedBy=multi-user.target`;
           </div>
         </div>
 
-        {/* 3 Probe Attempt Indicators */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-3.5 rounded bg-[#060608] border border-[#141418] space-y-2">
+        {/* 3 Probe Attempt Indicators - Clean Columns */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-2 border-y border-[#18181C] divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-[#1A1A1E]">
+          <div className="space-y-2 pt-2 md:pt-0">
             <div className="flex items-center justify-between text-xs">
               <span className="text-[#71717A]">تلاش اول (Probe 1/3):</span>
               <span className={missedHeartbeats >= 1 ? 'text-[#EF4444] font-medium' : 'text-[#10B981] font-medium'}>
@@ -146,7 +146,7 @@ WantedBy=multi-user.target`;
             <span className="text-xs text-[#71717A] block">درخواست ضربان پایا در ثانیه صفر</span>
           </div>
 
-          <div className="p-3.5 rounded bg-[#060608] border border-[#141418] space-y-2">
+          <div className="space-y-2 pt-3 md:pt-0 md:pr-6">
             <div className="flex items-center justify-between text-xs">
               <span className="text-[#71717A]">تلاش دوم (Probe 2/3):</span>
               <span className={missedHeartbeats >= 2 ? 'text-[#EF4444] font-medium' : missedHeartbeats === 1 ? 'text-[#F59E0B]' : 'text-[#10B981] font-medium'}>
@@ -163,7 +163,7 @@ WantedBy=multi-user.target`;
             <span className="text-xs text-[#71717A] block">پایش مجدد در ثانیه ۶۰</span>
           </div>
 
-          <div className="p-3.5 rounded bg-[#060608] border border-[#141418] space-y-2">
+          <div className="space-y-2 pt-3 md:pt-0 md:pr-6">
             <div className="flex items-center justify-between text-xs">
               <span className="text-[#71717A]">تلاش سوم و قطعی (Probe 3/3):</span>
               <span className={missedHeartbeats >= 3 ? 'text-[#EF4444] font-bold' : 'text-[#10B981] font-medium'}>
@@ -182,7 +182,7 @@ WantedBy=multi-user.target`;
         </div>
 
         {/* Liveness Diagnostics Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs border-t border-[#141418]">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs">
           <div className="flex items-center gap-4 text-[#71717A]">
             <span>آخرین ضربان: <span className="text-[#F4F4F5]">{operatorNode.lastHeartbeat}</span></span>
             <span>·</span>
@@ -209,11 +209,11 @@ WantedBy=multi-user.target`;
             )}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 9-Step Onboarding & Setup Lifecycle */}
-      <div className="p-5 rounded-lg bg-[#09090C] border border-[#18181C] space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#141418]">
+      {/* 9-Step Onboarding & Setup Lifecycle - Frameless List */}
+      <section className="space-y-4 pb-8 border-b border-[#18181C]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
           <div>
             <h3 className="text-base font-bold text-[#F4F4F5]">چرخه راه‌اندازی و اعتبارسنجی ورکر (Onboarding Lifecycle)</h3>
             <p className="text-xs text-[#71717A] mt-0.5">
@@ -226,12 +226,12 @@ WantedBy=multi-user.target`;
           </span>
         </div>
 
-        {/* 9 Steps Timeline */}
-        <div className="space-y-3">
+        {/* 9 Steps List */}
+        <div className="border-y border-[#18181B] divide-y divide-[#18181B]">
           {onboardingSteps.map((step) => (
             <div
               key={step.id}
-              className="flex items-start gap-3.5 p-3 rounded bg-[#060608] border border-[#141418] hover:border-[#1E1E24] transition-colors"
+              className="flex items-start gap-3.5 py-3.5 -mx-2 px-2 sm:-mx-3 sm:px-3 rounded-md hover:bg-[#0A0A0D] transition-colors"
             >
               <div className="h-6 w-6 rounded-full bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/25 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold tabular-nums">
                 {toPersianDigits(step.stepNumber)}
@@ -255,13 +255,13 @@ WantedBy=multi-user.target`;
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Provider & Model Availability (Provider-Agnostic Design) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-8 border-b border-[#18181C]">
         {/* Coding Provider Setup */}
-        <div className="p-5 rounded-lg bg-[#09090C] border border-[#18181C] space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#141418]">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-[#18181B]">
             <div className="flex items-center gap-2">
               <Zap className="h-4.5 w-4.5 text-[#7C3AED]" />
               <h3 className="text-base font-bold text-[#F4F4F5]">پرووایدر کدنویسی (Coding Provider)</h3>
@@ -270,17 +270,17 @@ WantedBy=multi-user.target`;
           </div>
 
           <div className="space-y-3 text-xs">
-            <div className="flex items-center justify-between p-2.5 rounded bg-[#060608] border border-[#141418]">
+            <div className="flex items-center justify-between py-2 border-b border-[#141418]">
               <span className="text-[#71717A]">پرووایدر فعال فعلی:</span>
               <span className="text-[#F4F4F5] font-medium">{operatorNode.activeProvider}</span>
             </div>
 
-            <div className="flex items-center justify-between p-2.5 rounded bg-[#060608] border border-[#141418]">
+            <div className="flex items-center justify-between py-2 border-b border-[#141418]">
               <span className="text-[#71717A]">طرح اشتراک و سهمیه:</span>
               <span className="text-[#D4D4D8] font-latin font-medium">{operatorNode.providerPlan}</span>
             </div>
 
-            <div className="space-y-1.5 p-2.5 rounded bg-[#060608] border border-[#141418]">
+            <div className="space-y-1.5 py-2 border-b border-[#141418]">
               <div className="flex items-center justify-between">
                 <span className="text-[#71717A]">سهمیه باقی‌مانده ساعتی:</span>
                 <span className="text-[#10B981] font-medium tabular-nums">
@@ -297,7 +297,7 @@ WantedBy=multi-user.target`;
 
             <div className="space-y-1 pt-1">
               <span className="text-[#71717A] block">مدل‌های آماده پذیرش در این گره:</span>
-              <div className="flex flex-wrap gap-1.5 mt-1">
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {operatorNode.supportedModels.map((m) => (
                   <span
                     key={m}
@@ -313,8 +313,8 @@ WantedBy=multi-user.target`;
         </div>
 
         {/* System Specs & Sandbox Check */}
-        <div className="p-5 rounded-lg bg-[#09090C] border border-[#18181C] space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#141418]">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-[#18181B]">
             <div className="flex items-center gap-2">
               <Shield className="h-4.5 w-4.5 text-[#10B981]" />
               <h3 className="text-base font-bold text-[#F4F4F5]">مشخصات هاست و سندباکس ایزوله</h3>
@@ -330,29 +330,29 @@ WantedBy=multi-user.target`;
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-2.5 rounded bg-[#060608] border border-[#141418]">
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div className="py-2 border-b border-[#141418]">
               <span className="text-[#71717A] block">سیستم‌عامل سرور:</span>
               <span className="text-[#F4F4F5] block font-latin font-medium mt-0.5 truncate" dir="ltr">
                 {operatorNode.os}
               </span>
             </div>
 
-            <div className="p-2.5 rounded bg-[#060608] border border-[#141418]">
+            <div className="py-2 border-b border-[#141418]">
               <span className="text-[#71717A] block">موتور سندباکس:</span>
               <span className="text-[#10B981] block font-latin font-medium mt-0.5 truncate" dir="ltr">
                 {operatorNode.isolationType}
               </span>
             </div>
 
-            <div className="p-2.5 rounded bg-[#060608] border border-[#141418]">
+            <div className="py-2 border-b border-[#141418]">
               <span className="text-[#71717A] block">مشخصات سخت‌افزار:</span>
               <span className="text-[#F4F4F5] block mt-0.5 tabular-nums">
                 {toPersianDigits(operatorNode.cpuCores)} هسته CPU · {toPersianDigits(operatorNode.memoryGb)} گیگابایت RAM
               </span>
             </div>
 
-            <div className="p-2.5 rounded bg-[#060608] border border-[#141418]">
+            <div className="py-2 border-b border-[#141418]">
               <span className="text-[#71717A] block">نام هاست ورکر:</span>
               <span className="text-[#A1A1AA] font-latin font-medium block mt-0.5 truncate" dir="ltr">
                 {operatorNode.hostname}
@@ -360,7 +360,7 @@ WantedBy=multi-user.target`;
             </div>
           </div>
 
-          <div className="p-3 rounded bg-[#060608] border border-[#141418] text-xs text-[#71717A] space-y-1">
+          <div className="text-xs text-[#71717A] space-y-1 pt-1 leading-relaxed">
             <span className="text-[#D4D4D8] font-medium block">تضمین امنیت کانتینر:</span>
             سندباکس داکر با هسته gVisor پیکربندی شده است. پس از کلون شدن مخزن مشتری، دسترسی شبکه بیرونی محدود شده و کلیه تغییرات فایل‌ها در فضای دیسک موقت tmpfs مانیتور می‌شوند.
           </div>

@@ -249,22 +249,22 @@ export const OperatorActiveJobsTab: React.FC = () => {
         </div>
       )}
 
-      {/* Crucial Architectural Policy Banner: Task Failure vs Worker Failure */}
-      <div className="p-5 rounded-lg bg-[#0A0A0D] border border-[#18181C] space-y-3">
+      {/* Crucial Architectural Policy Section: Task Failure vs Worker Failure - Frameless */}
+      <div className="pt-6 border-t border-[#18181C] space-y-3">
         <h3 className="text-base font-bold text-[#F4F4F5] flex items-center gap-2">
           <Shield className="h-4 w-4 text-[#7C3AED]" />
           <span>قوانین تفکیک خطای تسک (Task Failure) از خطای ورکر (Worker Failure)</span>
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-[#71717A] leading-relaxed">
-          <div className="p-3.5 rounded bg-[#060608] border border-[#141418] space-y-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-[#71717A] leading-relaxed pt-1">
+          <div className="space-y-1.5">
             <span className="text-[#D4D4D8] font-medium block">۱. خطای تسک (Task Failure):</span>
             <p>
               اگر تسک به دلیل نقص سورس‌کد مخزن، عدم پاس شدن تست‌های قبلی مشتری یا ابهام نیازمندی متوقف شود، ورکر مقصر نیست. تا زمانی که ورکر فرآیند را به صورت سالم گزارش کرده و گزارش QA را ثبت کند، هزینه محاسبات بر مبنای توکن‌های مصرف‌شده به حساب اپراتور واریز می‌گردد.
             </p>
           </div>
 
-          <div className="p-3.5 rounded bg-[#060608] border border-[#141418] space-y-1.5">
+          <div className="space-y-1.5">
             <span className="text-[#D4D4D8] font-medium block">۲. خطای ورکر و قطعی گره (Worker Failure):</span>
             <p>
               اگر ورکر به دلیل قطع برق یا اینترنت در ۳ درخواست پایش متوالی (۳ دقیقه) بی‌پاسخ بماند، تسک به حالت بازتخصیص می‌رود. آخرین وضعیت سالم ذخیره می‌شود، اما به دلیل عدم تکمیل فرآیند توسط ورکر، هیچ درآمدی برای تلاش نیمه‌کاره پرداخت نمی‌گردد تا انگیزه سوءاستفاده از بین برود.

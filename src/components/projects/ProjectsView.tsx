@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNervel } from '../../context/NervelContext';
-import { PageHeader } from '../common/PageHeader';
 import { Button } from '../common/Button';
+import { SectionHeader } from '../common/SectionHeader';
+import { OperationalList } from '../common/OperationalList';
+import { OperationalRow } from '../common/OperationalRow';
+import { MetadataLine } from '../common/MetadataLine';
 import { CreateProjectModal } from './CreateProjectModal';
 import { toPersianDigits } from '../../utils/formatters';
 import {
@@ -67,86 +70,80 @@ export const ProjectsView: React.FC = () => {
     const stats = getProjectTaskStats(project);
 
     return (
-      <div
+      <OperationalRow
         key={project.id}
         onClick={() => navigateToProject(project.id)}
-        className="p-5 sm:px-6 hover:bg-[#0C0C0F] transition-colors cursor-pointer flex flex-col md:flex-row md:items-center md:justify-between gap-4 select-none"
-      >
-        {/* Name and Source */}
-        <div className="space-y-1.5 min-w-0 flex-1">
-          <div className="flex items-center gap-3">
-            <h3 className="text-base font-medium text-[#F4F4F5] hover:text-[#7C3AED] transition-colors">
-              {project.name}
-            </h3>
+        identity={
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-[16px] sm:text-[17px] font-bold text-[#F4F4F5] hover:text-[#7C3AED] transition-colors">
+                {project.name}
+              </h3>
 
-            {project.sourceType === 'github' ? (
-              <span className="text-xs text-[#71717A] px-2 py-0.5 rounded bg-[#121215] border border-[#222226]" dir="ltr">
-                GitHub
-              </span>
-            ) : project.sourceType === 'zip' ? (
-              <span className="text-xs text-[#71717A] px-2 py-0.5 rounded bg-[#121215] border border-[#222226]">
-                ZIP
-              </span>
-            ) : (
-              <span className="text-xs text-[#71717A] px-2 py-0.5 rounded bg-[#121215] border border-[#222226]">
-                فایل مستقیم
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 text-xs sm:text-[13px] text-[#71717A]">
-            {project.repoUrl ? (
-              <span className="flex items-center gap-1.5 text-[#A1A1AA] font-latin" dir="ltr">
-                <FolderGit2 className="h-3.5 w-3.5 text-[#52525B]" />
-                <span>{project.repoUrl}</span>
-              </span>
-            ) : project.zipFilename ? (
-              <span className="flex items-center gap-1.5 text-[#A1A1AA] font-latin" dir="ltr">
-                <FileArchive className="h-3.5 w-3.5 text-[#52525B]" />
-                <span>{project.zipFilename}</span>
-              </span>
-            ) : (
-              <span className="flex items-center gap-1.5 text-[#A1A1AA]">
-                <FileCode2 className="h-3.5 w-3.5 text-[#52525B]" />
-                <span>فایل‌های سورس</span>
-              </span>
-            )}
-
-            {project.defaultBranch && (
-              <>
-                <span className="text-[#3F3F46]">·</span>
-                <span className="flex items-center gap-1 font-latin" dir="ltr">
-                  <GitBranch className="h-3 w-3 text-[#52525B]" />
-                  <span>{project.defaultBranch}</span>
+              {project.sourceType === 'github' ? (
+                <span className="text-[11px] text-[#71717A] px-1.5 py-0.2 rounded bg-[#121215] border border-[#222226]" dir="ltr">
+                  GitHub
                 </span>
-              </>
-            )}
+              ) : project.sourceType === 'zip' ? (
+                <span className="text-[11px] text-[#71717A] px-1.5 py-0.2 rounded bg-[#121215] border border-[#222226]">
+                  ZIP
+                </span>
+              ) : (
+                <span className="text-[11px] text-[#71717A] px-1.5 py-0.2 rounded bg-[#121215] border border-[#222226]">
+                  فایل مستقیم
+                </span>
+              )}
+            </div>
 
-            <span className="text-[#3F3F46]">·</span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5 text-[#52525B]" />
-              <span>آخرین فعالیت: {project.lastActivityAt}</span>
-            </span>
+            <MetadataLine
+              items={[
+                project.repoUrl
+                  ? {
+                      icon: <FolderGit2 className="h-3.5 w-3.5" />,
+                      label: project.repoUrl,
+                      isLtr: true,
+                    }
+                  : project.zipFilename
+                  ? {
+                      icon: <FileArchive className="h-3.5 w-3.5" />,
+                      label: project.zipFilename,
+                      isLtr: true,
+                    }
+                  : {
+                      icon: <FileCode2 className="h-3.5 w-3.5" />,
+                      label: 'فایل‌های سورس',
+                    },
+                project.defaultBranch && {
+                  icon: <GitBranch className="h-3 w-3" />,
+                  label: project.defaultBranch,
+                  isLtr: true,
+                },
+                {
+                  icon: <Clock className="h-3 w-3" />,
+                  label: `آخرین فعالیت: ${project.lastActivityAt}`,
+                },
+              ]}
+            />
           </div>
-        </div>
-
-        {/* Task Counts, Pin & Actions */}
-        <div className="flex items-center justify-between md:justify-end gap-5 shrink-0">
-          <div className="flex items-center gap-4 text-xs sm:text-sm">
-            {stats.activeCount > 0 && (
-              <span className="flex items-center gap-1.5 text-[#7C3AED] font-medium">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#7C3AED]" />
+        }
+        status={
+          <div className="space-y-1">
+            {stats.activeCount > 0 ? (
+              <span className="flex items-center gap-1.5 text-xs text-[#7C3AED] font-bold">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#7C3AED] animate-pulse" />
                 <span className="tabular-nums">{toPersianDigits(stats.activeCount)} در حال اجرا</span>
               </span>
+            ) : (
+              <span className="text-xs text-[#52525B]">تسک فعالی وجود ندارد</span>
             )}
 
-            <span className="text-[#71717A] tabular-nums">
-              {toPersianDigits(stats.totalCount)} تسک کل
-            </span>
+            <div className="text-xs text-[#71717A] tabular-nums">
+              {toPersianDigits(stats.totalCount)} تسک در مجموع
+            </div>
           </div>
-
+        }
+        action={
           <div className="flex items-center gap-2">
-            {/* Pin Toggle Control */}
             <button
               type="button"
               onClick={(e) => {
@@ -154,7 +151,7 @@ export const ProjectsView: React.FC = () => {
                 togglePinProject(project.id);
               }}
               title={project.isPinned ? 'حذف از نشان‌شده‌ها' : 'نشان کردن پروژه'}
-              className={`p-2 rounded-md transition-colors cursor-pointer ${
+              className={`p-2 rounded transition-colors cursor-pointer flex items-center justify-center ${
                 project.isPinned
                   ? 'text-[#7C3AED] bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20'
                   : 'text-[#52525B] hover:text-[#A1A1AA] hover:bg-[#141418]'
@@ -163,34 +160,36 @@ export const ProjectsView: React.FC = () => {
               <Pin className={`h-4 w-4 ${project.isPinned ? 'fill-current' : ''}`} />
             </button>
 
-            <ArrowLeft className="h-4 w-4 text-[#52525B] hidden sm:block" />
+            <ArrowLeft className="h-4 w-4 text-[#52525B] group-hover:text-[#F4F4F5] transition-colors" />
           </div>
-        </div>
-      </div>
+        }
+      />
     );
   };
 
   return (
     <div className="w-full space-y-8 animate-nervel-enter">
       
-      {/* Page Header */}
-      <PageHeader
-        breadcrumbs={[
-          { label: 'NERVEL' },
-          { label: 'پروژه‌ها' },
-        ]}
-        title="پروژه‌ها"
-        description="فضای کاری متمرکز برای نگهداری سورس‌کد، تاریخچه تسک‌ها و دستورالعمل‌های پایدار هر کدبیس"
-        actions={
-          <Button
-            variant="primary"
-            onClick={() => setIsCreateModalOpen(true)}
-            rightIcon={<Plus className="h-4 w-4" />}
-          >
-            پروژه جدید
-          </Button>
-        }
-      />
+      {/* Page Header as ONE horizontal composition */}
+      <div className="flex flex-row items-center justify-between gap-4 pb-2 border-b border-[#18181C]">
+        <div>
+          <h1 className="text-2xl sm:text-[26px] font-bold text-[#F4F4F5]">
+            پروژه‌ها
+          </h1>
+          <p className="text-sm text-[#71717A] mt-1 leading-relaxed">
+            فضای کاری متمرکز برای نگهداری سورس‌کد، تاریخچه تسک‌ها و دستورالعمل‌های پایدار هر کدبیس
+          </p>
+        </div>
+
+        <Button
+          variant="primary"
+          onClick={() => setIsCreateModalOpen(true)}
+          rightIcon={<Plus className="h-4 w-4" />}
+          className="shrink-0 font-medium"
+        >
+          پروژه جدید
+        </Button>
+      </div>
 
       {/* Search Input Bar */}
       <div className="relative max-w-md">
@@ -204,42 +203,30 @@ export const ProjectsView: React.FC = () => {
         <Search className="absolute right-3 top-3 h-4 w-4 text-[#71717A] pointer-events-none" />
       </div>
 
-      {/* Pinned Projects Section (First on Projects page if any) */}
+      {/* Pinned Projects Section */}
       {pinnedProjects.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center gap-2 pb-1">
-            <Pin className="h-4 w-4 text-[#7C3AED] fill-current" />
-            <h2 className="text-lg font-bold text-[#F4F4F5]">
-              پروژه‌های نشان‌شده
-            </h2>
-            <span className="text-xs text-[#71717A] tabular-nums">
-              ({toPersianDigits(pinnedProjects.length)})
-            </span>
-          </div>
+        <section className="space-y-2">
+          <SectionHeader
+            title="پروژه‌های نشان‌شده"
+            count={toPersianDigits(pinnedProjects.length)}
+            semanticDot="bg-[#7C3AED]"
+          />
 
-          <div className="border border-[#1E1E22] rounded-lg overflow-hidden bg-[#08080A]">
-            <div className="divide-y divide-[#18181B]">
-              {pinnedProjects.map(renderProjectRow)}
-            </div>
-          </div>
+          <OperationalList>
+            {pinnedProjects.map(renderProjectRow)}
+          </OperationalList>
         </section>
       )}
 
       {/* All Projects Section */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between pb-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-[#F4F4F5]">
-              {pinnedProjects.length > 0 ? 'سایر پروژه‌ها' : 'همه پروژه‌ها'}
-            </h2>
-            <span className="text-xs text-[#71717A] tabular-nums">
-              ({toPersianDigits(unpinnedProjects.length)})
-            </span>
-          </div>
-        </div>
+      <section className="space-y-2">
+        <SectionHeader
+          title={pinnedProjects.length > 0 ? 'سایر پروژه‌ها' : 'همه پروژه‌ها'}
+          count={toPersianDigits(unpinnedProjects.length)}
+        />
 
         {filteredProjects.length === 0 ? (
-          <div className="border border-[#18181B] rounded-lg p-12 text-center bg-[#08080A]">
+          <div className="py-12 text-center border-y border-[#18181C]">
             <p className="text-sm text-[#71717A]">
               پروژه‌ای مطابق با جستجوی شما یافت نشد.
             </p>
@@ -251,11 +238,9 @@ export const ProjectsView: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="border border-[#18181B] rounded-lg overflow-hidden bg-[#08080A]">
-            <div className="divide-y divide-[#18181B]">
-              {unpinnedProjects.map(renderProjectRow)}
-            </div>
-          </div>
+          <OperationalList>
+            {unpinnedProjects.map(renderProjectRow)}
+          </OperationalList>
         )}
       </section>
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNervel } from '../../context/NervelContext';
+import { toast } from '../../context/ToastContext';
 import { StatusIndicator } from '../common/StatusIndicator';
 import { CodeDiffViewer } from '../common/CodeDiffViewer';
 import { Button } from '../common/Button';
@@ -217,9 +218,7 @@ export const TaskDetailView: React.FC = () => {
 
           {/* Right Status Indicator & Actions */}
           <div className="flex items-center gap-3 shrink-0 self-start lg:self-auto">
-            <div className="px-3.5 py-1.5 rounded-md bg-[#0C0C0F] border border-[#222226]">
-              <StatusIndicator status={task.status} size="md" />
-            </div>
+            <StatusIndicator status={task.status} size="md" />
 
             {/* Cancel task action if active */}
             {task.status !== 'completed' && task.status !== 'cancelled' && task.status !== 'failed' && (
@@ -406,143 +405,247 @@ export const TaskDetailView: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          TAB 1: OVERVIEW (نمای کلی - Flattened Document Layout)
+          TAB 1: OVERVIEW (نمای کلی - Deliberate 2-Column Composition)
+          RIGHT 8 columns: Request, Execution Progress, Output Result
+          LEFT 4 columns: Cost, Timing, Model, Key Technical Metadata
           ========================================================================= */}
       {activeTab === 'overview' && (
-        <div className="space-y-6 w-full animate-nervel-enter">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start animate-nervel-enter">
           
-          {/* Section 1: Current State & Most Recent Event */}
-          <div className="space-y-2 pb-6 border-b border-[#18181C]">
-            <div className="flex items-center justify-between">
+          {/* RIGHT 8 COLUMNS: Request, Progress, Deliverable Result */}
+          <div className="lg:col-span-8 space-y-6">
+            
+            {/* Live Execution Progress & Status */}
+            <div className="space-y-2 pb-6 border-b border-[#18181C]">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold text-[#F4F4F5]">
+                  وضعیت لحظه‌ای و پیشرفت اجرا
+                </h2>
+                <StatusIndicator status={task.status} size="sm" />
+              </div>
+
+              <p className="text-sm text-[#D4D4D8] leading-relaxed">
+                {task.status === 'completed'
+                  ? 'اجرای تسک با موفقیت پایان یافته، تمام تست‌های واحد پاس شده و پچ تغییرات نهایی ایجاد شد.'
+                  : task.status === 'failed'
+                  ? 'اجرای تسک به دلیل خطای غیرقابل جبران در مرحله کامپایل یا تست متوقف شد. هزینه کارکرد واقعی محاسبه و باقیمانده سقف رزرو به کیف پول بازگردانده شده است.'
+                  : task.status === 'cancelled'
+                  ? 'اجرای تسک متوقف گردید و مبالغ مازاد رزرو طبق سیاست شفاف آزادسازی گردید.'
+                  : task.status === 'running'
+                  ? 'ورکر کانتینری ایزوله در حال اعمال تغییرات روی فایل‌ها و تدوین تست‌های خودکار است.'
+                  : task.status === 'validating'
+                  ? 'کدنویسی به پایان رسیده و اسکریپت‌های سنجش بیلد، تایپ‌اسکریپت و تست‌های واحد در حال اجرا هستند.'
+                  : task.status === 'waiting_for_customer'
+                  ? 'اجرا موقتاً متوقف شده و منتظر اقدام و پاسخ شما به استعلام فنی ورکر است.'
+                  : task.status === 'reassigning'
+                  ? 'پایش ورکر با قطعی مواجه شد؛ در انتظار تایید انتقال به ورکر جایگزین.'
+                  : 'تسک در صف زمان‌بندی شبکه قرار دارد و به‌زودی به نخستین ورکر آماده واگذار می‌شود.'}
+              </p>
+
+              {/* Failure Detail Alert if failed */}
+              {task.status === 'failed' && (
+                <div className="p-4 rounded-lg bg-[#140A0A] border border-[#EF4444]/30 space-y-2 mt-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-[#EF4444]">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <span>خطای عدم موفقیت در تکمیل تسک (Task Failed)</span>
+                  </div>
+                  <p className="text-sm text-[#D4D4D8] leading-relaxed">
+                    {task.qaReport?.testSummary || 'اجرای کانتینر تسک پس از تلاش‌های خودکار رفع خطا با شکست مواجه شد.'}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-[#71717A]">
+                    <span>هزینه کارکرد مصرف‌شده تا لحظه خطا: <strong className="text-[#F4F4F5] tabular-nums font-latin">{formatToman(task.actualCost || 0)}</strong></span>
+                    <span>·</span>
+                    <span>مازاد اعتبار رزرو مستردشده به کیف پول: <strong className="text-[#10B981] tabular-nums font-latin">{formatToman(Math.max(0, task.reservedCap - (task.actualCost || 0)))}</strong></span>
+                  </div>
+                </div>
+              )}
+
+              {task.logs.length > 0 && (
+                <div className="pt-2 flex items-center gap-2 text-xs text-[#71717A]">
+                  <Clock className="h-3.5 w-3.5 text-[#52525B]" />
+                  <span>آخرین رخداد: {task.logs[task.logs.length - 1].message}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Request Summary & Acceptance Criteria */}
+            <div className="space-y-3 pb-6 border-b border-[#18181C]">
               <h2 className="text-base font-bold text-[#F4F4F5]">
-                وضعیت لحظه‌ای تسک
+                شرح درخواست و معیارهای پذیرش
               </h2>
-              <StatusIndicator status={task.status} size="sm" />
+
+              <p className="text-sm text-[#A1A1AA] leading-relaxed whitespace-pre-line">
+                {task.description}
+              </p>
+
+              {task.acceptanceCriteria.length > 0 && (
+                <div className="space-y-1.5 pt-2">
+                  <span className="text-xs font-medium text-[#71717A] block">
+                    معیارهای ارزیابی نهایی (QA):
+                  </span>
+                  <ul className="space-y-1 text-xs text-[#D4D4D8] pr-2">
+                    {task.acceptanceCriteria.map((crit, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <span className="text-[#7C3AED] font-bold">•</span>
+                        <span>{crit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
-            <p className="text-sm text-[#D4D4D8] leading-relaxed">
-              {task.status === 'completed'
-                ? 'اجرای تسک با موفقیت پایان یافته، تمام تست‌های واحد پاس شده و پچ تغییرات نهایی ایجاد شد.'
-                : task.status === 'failed'
-                ? 'اجرای تسک به دلیل خطای غیرقابل جبران در مرحله کامپایل یا تست متوقف شد. هزینه کارکرد واقعی محاسبه و باقیمانده سقف رزرو به کیف پول بازگردانده شده است.'
-                : task.status === 'cancelled'
-                ? 'اجرای تسک متوقف گردید و مبالغ مازاد رزرو طبق سیاست شفاف آزادسازی گردید.'
-                : task.status === 'running'
-                ? 'ورکر کانتینری ایزوله در حال اعمال تغییرات روی فایل‌ها و تدوین تست‌های خودکار است.'
-                : task.status === 'validating'
-                ? 'کدنویسی به پایان رسیده و اسکریپت‌های سنجش بیلد، تایپ‌اسکریپت و تست‌های واحد در حال اجرا هستند.'
-                : task.status === 'waiting_for_customer'
-                ? 'اجرا موقتاً متوقف شده و منتظر اقدام و پاسخ شما به استعلام فنی ورکر است.'
-                : task.status === 'reassigning'
-                ? 'پایش ورکر با قطعی مواجه شد؛ در انتظار تایید انتقال به ورکر جایگزین.'
-                : 'تسک در صف زمان‌بندی شبکه قرار دارد و به‌زودی به نخستین ورکر آماده واگذار می‌شود.'}
-            </p>
-
-            {/* Failure Detail Alert if failed */}
-            {task.status === 'failed' && (
-              <div className="p-4 rounded-lg bg-[#140A0A] border border-[#EF4444]/30 space-y-2 mt-2">
-                <div className="flex items-center gap-2 text-sm font-medium text-[#EF4444]">
-                  <AlertTriangle className="h-4 w-4 shrink-0" />
-                  <span>خطای عدم موفقیت در تکمیل تسک (Task Failed)</span>
+            {/* Output Summary if ready */}
+            {task.deliverables && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
+                    <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
+                    <span>خروجی نهایی آماده است</span>
+                  </div>
+                  <p className="text-xs text-[#71717A]">
+                    تغییرات کد، فایل Patch و آرشیو کامل در دسترس قرار گرفت.
+                  </p>
                 </div>
-                <p className="text-sm text-[#D4D4D8] leading-relaxed">
-                  {task.qaReport?.testSummary || 'اجرای کانتینر تسک پس از تلاش‌های خودکار رفع خطا با شکست مواجه شد.'}
-                </p>
-                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-[#71717A]">
-                  <span>هزینه کارکرد مصرف‌شده تا لحظه خطا: <strong className="text-[#F4F4F5] tabular-nums font-latin">{formatToman(task.actualCost || 0)}</strong></span>
-                  <span>·</span>
-                  <span>مازاد اعتبار رزرو مستردشده به کیف پول: <strong className="text-[#10B981] tabular-nums font-latin">{formatToman(Math.max(0, task.reservedCap - (task.actualCost || 0)))}</strong></span>
-                </div>
-              </div>
-            )}
 
-            {task.logs.length > 0 && (
-              <div className="pt-1 flex items-center gap-2 text-xs text-[#71717A]">
-                <Clock className="h-3.5 w-3.5 text-[#52525B]" />
-                <span>آخرین رخداد: {task.logs[task.logs.length - 1].message}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Section 2: Request Summary & Acceptance Criteria */}
-          <div className="space-y-3 pb-6 border-b border-[#18181C]">
-            <h2 className="text-base font-bold text-[#F4F4F5]">
-              شرح درخواست و معیارهای پذیرش
-            </h2>
-
-            <p className="text-sm text-[#A1A1AA] leading-relaxed whitespace-pre-line">
-              {task.description}
-            </p>
-
-            {task.acceptanceCriteria.length > 0 && (
-              <div className="space-y-1.5 pt-2">
-                <span className="text-xs font-medium text-[#71717A] block">
-                  معیارهای ارزیابی نهایی (QA):
-                </span>
-                <ul className="space-y-1 text-xs text-[#D4D4D8] pr-2">
-                  {task.acceptanceCriteria.map((crit, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-[#7C3AED] font-bold">•</span>
-                      <span>{crit}</span>
-                    </li>
-                  ))}
-                </ul>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setActiveTab('output')}
+                  leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
+                >
+                  مشاهده و دریافت خروجی
+                </Button>
               </div>
             )}
           </div>
 
-          {/* Section 3: Execution & Cost Metric Row (Clean typography + dividers) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-2 pb-6 border-b border-[#18181C] divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-[#1A1A1E]">
-            <div className="space-y-0.5 pt-2 sm:pt-0">
-              <span className="text-xs text-[#71717A] block">مدل پردازشی:</span>
-              <span className="text-base font-medium text-[#F4F4F5] font-latin block" dir="ltr">
-                {task.modelName}
-              </span>
-              <span className="text-xs text-[#52525B] block">موتور تخصیص‌یافته به تسک</span>
-            </div>
+          {/* LEFT 4 COLUMNS: Cost, Timing, Model & Metadata */}
+          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-8">
+            
+            {/* Cost & Reserved Cap */}
+            <div className="space-y-3 pb-6 border-b border-[#18181C]">
+              <h3 className="text-sm font-bold text-[#F4F4F5]">
+                هزینه و اعتبار
+              </h3>
 
-            <div className="space-y-0.5 pt-3 sm:pt-0 sm:pr-6">
-              <span className="text-xs text-[#71717A] block">سقف اعتبار رزرو:</span>
-              <span className="text-base font-medium text-[#F4F4F5] tabular-nums block">
-                {formatToman(task.reservedCap)}
-              </span>
-              <span className="text-xs text-[#52525B] block">مسدودی موقت حساب</span>
-            </div>
-
-            <div className="space-y-0.5 pt-3 sm:pt-0 sm:pr-6">
-              <span className="text-xs text-[#71717A] block">هزینه محاسبه‌شده:</span>
-              <span className="text-base font-medium text-[#F4F4F5] tabular-nums block">
-                {task.actualCost ? formatToman(task.actualCost) : 'بر مبنای مصرف واقعی توکن'}
-              </span>
-              <span className="text-xs text-[#52525B] block">
-                {task.actualCost ? 'تسویه شده' : 'پس از پایان محاسبه می‌شود'}
-              </span>
-            </div>
-          </div>
-
-          {/* Section 4: Output Summary if ready */}
-          {task.deliverables && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
-                  <CheckCircle2 className="h-4 w-4 text-[#10B981]" />
-                  <span>خروجی نهایی آماده است</span>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between py-1 border-b border-[#141418]">
+                  <span className="text-[#71717A]">هزینه محاسبه‌شده:</span>
+                  <span className="font-bold text-[#F4F4F5] tabular-nums">
+                    {task.actualCost ? formatToman(task.actualCost) : 'محاسبه پس از اجرا'}
+                  </span>
                 </div>
-                <p className="text-xs text-[#71717A]">
-                  تغییرات کد، فایل Patch و آرشیو کامل در دسترس قرار گرفت.
-                </p>
-              </div>
 
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setActiveTab('output')}
-                leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
-              >
-                مشاهده و دریافت خروجی
-              </Button>
+                <div className="flex items-center justify-between py-1 border-b border-[#141418]">
+                  <span className="text-[#71717A]">سقف رزرو اولیه:</span>
+                  <span className="font-bold text-[#F4F4F5] tabular-nums">
+                    {formatToman(task.reservedCap)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-[#71717A]">وضعیت تسویه:</span>
+                  <span className="text-[#A1A1AA]">
+                    {task.status === 'completed'
+                      ? 'تسویه قطعی'
+                      : task.status === 'failed'
+                      ? 'تسویه تا مرحله خطا + استرداد مازاد'
+                      : 'رزرو موقت در کیف پول'}
+                  </span>
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Model & Infrastructure Info */}
+            <div className="space-y-3 pb-6 border-b border-[#18181C]">
+              <h3 className="text-sm font-bold text-[#F4F4F5]">
+                مدل و زیرساخت
+              </h3>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between py-1 border-b border-[#141418]">
+                  <span className="text-[#71717A]">مدل پردازشی:</span>
+                  <span className="font-medium text-[#F4F4F5] font-latin" dir="ltr">
+                    {task.modelName}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between py-1 border-b border-[#141418]">
+                  <span className="text-[#71717A]">شناسه ورکر:</span>
+                  <span className="font-medium text-[#D4D4D8] font-latin" dir="ltr">
+                    {task.workerId || 'در انتظار تخصیص'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-[#71717A]">پلن سندباکس:</span>
+                  <span className="text-[#A1A1AA]">
+                    {task.workerPlan || 'Dedicated Sandbox'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Timing & Dates */}
+            <div className="space-y-3 pb-6 border-b border-[#18181C]">
+              <h3 className="text-sm font-bold text-[#F4F4F5]">
+                زمان‌بندی
+              </h3>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between py-1 border-b border-[#141418]">
+                  <span className="text-[#71717A]">زمان ثبت:</span>
+                  <span className="tabular-nums text-[#D4D4D8]">
+                    {task.createdAt}
+                  </span>
+                </div>
+
+                {task.completedAt && (
+                  <div className="flex items-center justify-between py-1 border-b border-[#141418]">
+                    <span className="text-[#71717A]">زمان تکمیل:</span>
+                    <span className="tabular-nums text-[#10B981]">
+                      {task.completedAt}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-[#71717A]">شاخه گیت:</span>
+                  <span className="font-latin text-[#D4D4D8]" dir="ltr">
+                    {task.branch || 'main'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions (Dispute or Cancel) */}
+            <div className="space-y-2">
+              {task.status === 'completed' && !task.dispute && (
+                <button
+                  type="button"
+                  onClick={() => setIsDisputeOpen(true)}
+                  className="w-full py-2 px-3 text-xs text-[#71717A] hover:text-[#EF4444] border border-[#222226] hover:border-[#EF4444]/40 rounded transition-colors cursor-pointer text-center"
+                >
+                  ثبت اعتراض فنی به خروجی
+                </button>
+              )}
+
+              {(task.status === 'queued' || task.status === 'running') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    cancelTask(task.id);
+                    toast.info('تسک متوقف شد');
+                  }}
+                  className="w-full py-2 px-3 text-xs text-[#EF4444] hover:bg-[#EF4444]/10 border border-[#EF4444]/20 rounded transition-colors cursor-pointer text-center"
+                >
+                  توقف و انصراف از تسک
+                </button>
+              )}
+            </div>
+
+          </div>
 
         </div>
       )}
@@ -559,14 +662,14 @@ export const TaskDetailView: React.FC = () => {
         <div className="space-y-6 w-full animate-nervel-enter">
           
           {/* Deliverables Section */}
-          <div className="border border-[#18181B] rounded-lg p-5 bg-[#08080A] space-y-4">
-            <h2 className="text-lg font-bold text-[#F4F4F5]">
+          <div className="space-y-3 pb-6 border-b border-[#18181C]">
+            <h2 className="text-base font-bold text-[#F4F4F5]">
               بسته‌های تحویلی و خروجی کد
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Pull Request Card */}
-              <div className="border border-[#222226] rounded-md p-4 bg-[#0C0C0F] space-y-2 flex flex-col justify-between">
+              <div className="border border-[#222226] rounded-md p-4 bg-[#0A0A0D] space-y-2 flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
                     <GitPullRequest className="h-4 w-4 text-[#7C3AED]" />
@@ -615,7 +718,7 @@ export const TaskDetailView: React.FC = () => {
               </div>
 
               {/* Patch File */}
-              <div className="border border-[#222226] rounded-md p-4 bg-[#0C0C0F] space-y-2 flex flex-col justify-between">
+              <div className="border border-[#222226] rounded-md p-4 bg-[#0A0A0D] space-y-2 flex flex-col justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
                   <FileCode className="h-4 w-4 text-[#7C3AED]" />
                   <span>فایل Git Patch</span>
@@ -633,7 +736,7 @@ export const TaskDetailView: React.FC = () => {
               </div>
 
               {/* ZIP Archive */}
-              <div className="border border-[#222226] rounded-md p-4 bg-[#0C0C0F] space-y-2 flex flex-col justify-between">
+              <div className="border border-[#222226] rounded-md p-4 bg-[#0A0A0D] space-y-2 flex flex-col justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium text-[#F4F4F5]">
                   <FileArchive className="h-4 w-4 text-[#7C3AED]" />
                   <span>آرشیو کامل ZIP</span>
@@ -653,13 +756,13 @@ export const TaskDetailView: React.FC = () => {
           </div>
 
           {/* QA & Verification Results */}
-          <div className="border border-[#18181B] rounded-lg p-5 bg-[#08080A] space-y-3">
-            <h2 className="text-lg font-bold text-[#F4F4F5]">
+          <div className="space-y-3 pb-6 border-b border-[#18181C]">
+            <h2 className="text-base font-bold text-[#F4F4F5]">
               نتایج ارزیابی کیفی و اعتبارسنجی خودکار (QA)
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] flex items-center justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-2 border-y border-[#18181C] divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-[#1A1A1E] text-xs">
+              <div className="flex items-center justify-between pt-2 sm:pt-0">
                 <span className="text-[#71717A]">کامپایل و بیلد:</span>
                 {task.qaReport?.buildStatus === 'failed' ? (
                   <span className="text-[#EF4444] font-medium flex items-center gap-1">
@@ -674,7 +777,7 @@ export const TaskDetailView: React.FC = () => {
                 )}
               </div>
 
-              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] flex items-center justify-between">
+              <div className="flex items-center justify-between pt-3 sm:pt-0 sm:pr-6">
                 <span className="text-[#71717A]">تست‌های خودکار:</span>
                 {task.qaReport?.testStatus === 'failed' ? (
                   <span className="text-[#EF4444] font-medium flex items-center gap-1">
@@ -689,7 +792,7 @@ export const TaskDetailView: React.FC = () => {
                 )}
               </div>
 
-              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] flex items-center justify-between">
+              <div className="flex items-center justify-between pt-3 sm:pt-0 sm:pr-6">
                 <span className="text-[#71717A]">بررسی لینتر و تایپ‌ها:</span>
                 {task.qaReport?.lintStatus === 'failed' ? (
                   <span className="text-[#EF4444] font-medium flex items-center gap-1">
@@ -714,7 +817,7 @@ export const TaskDetailView: React.FC = () => {
 
           {/* Changed Files & Code Diff */}
           <div className="space-y-3">
-            <h2 className="text-lg font-bold text-[#F4F4F5]">
+            <h2 className="text-base font-bold text-[#F4F4F5]">
               فایل‌های تغییر‌یافته ({toPersianDigits(task.qaReport?.changedFiles.length || 2)})
             </h2>
 
@@ -758,8 +861,8 @@ export const TaskDetailView: React.FC = () => {
           ========================================================================= */}
       {activeTab === 'activity' && (
         <div className="w-full space-y-6 animate-nervel-enter">
-          <div className="border border-[#18181B] rounded-lg p-6 bg-[#08080A]">
-            <h2 className="text-lg font-bold text-[#F4F4F5] mb-6">
+          <div className="space-y-6">
+            <h2 className="text-base font-bold text-[#F4F4F5]">
               خط زمانی مراحل اجرای تسک
             </h2>
 
@@ -813,35 +916,35 @@ export const TaskDetailView: React.FC = () => {
         <div className="w-full space-y-6 animate-nervel-enter">
           
           {/* Technical Metadata Grid */}
-          <div className="border border-[#18181B] rounded-lg p-5 bg-[#08080A] space-y-4">
-            <h2 className="text-lg font-bold text-[#F4F4F5] flex items-center gap-2">
+          <div className="space-y-4 pb-6 border-b border-[#18181C]">
+            <h2 className="text-base font-bold text-[#F4F4F5] flex items-center gap-2">
               <Cpu className="h-4 w-4 text-[#7C3AED]" />
               <span>مشخصات فنی و زیرساختی اجرا</span>
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] space-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs py-3 border-y border-[#18181B]">
+              <div className="space-y-1">
                 <span className="text-[#71717A] block">شناسه ورکر پردازشی:</span>
                 <span className="text-[#F4F4F5] font-medium font-latin block" dir="ltr">
                   {task.workerId || 'در انتظار تخصیص'}
                 </span>
               </div>
 
-              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] space-y-1">
+              <div className="space-y-1">
                 <span className="text-[#71717A] block">هاست‌نیم گره ورکر:</span>
                 <span className="text-[#F4F4F5] font-medium font-latin block" dir="ltr">
                   {task.workerHostname || 'node-worker-pending'}
                 </span>
               </div>
 
-              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] space-y-1">
+              <div className="space-y-1">
                 <span className="text-[#71717A] block">پلن پردازشی ورکر:</span>
                 <span className="text-[#F4F4F5] font-medium block">
                   {task.workerPlan || 'Standard Dedicated Sandbox'}
                 </span>
               </div>
 
-              <div className="p-3 rounded bg-[#0C0C0F] border border-[#222226] space-y-1">
+              <div className="space-y-1">
                 <span className="text-[#71717A] block">استراتژی تخصیص مجدد:</span>
                 <span className="text-[#F4F4F5] font-medium block">
                   استعلام و انتقال خودکار
@@ -851,26 +954,26 @@ export const TaskDetailView: React.FC = () => {
 
             {/* Token Usage Stats */}
             {task.tokenStats && (
-              <div className="pt-3 border-t border-[#141418] space-y-2">
+              <div className="pt-3 space-y-2">
                 <span className="text-xs font-medium text-[#71717A] block">
                   آمار مصرف توکن‌ها:
                 </span>
-                <div className="grid grid-cols-3 gap-3 text-xs">
-                  <div className="p-2.5 rounded bg-[#0C0C0F] border border-[#222226]">
+                <div className="grid grid-cols-3 gap-6 text-xs py-2 border-b border-[#18181B]">
+                  <div>
                     <span className="text-[#71717A] font-latin block">Input Tokens</span>
                     <span className="text-[#F4F4F5] font-medium tabular-nums mt-0.5 block">
                       {toPersianDigits(new Intl.NumberFormat('en-US').format(task.tokenStats.inputTokens))}
                     </span>
                   </div>
 
-                  <div className="p-2.5 rounded bg-[#0C0C0F] border border-[#222226]">
+                  <div>
                     <span className="text-[#71717A] font-latin block">Cached Context</span>
                     <span className="text-[#F4F4F5] font-medium tabular-nums mt-0.5 block">
                       {toPersianDigits(new Intl.NumberFormat('en-US').format(task.tokenStats.cachedTokens))}
                     </span>
                   </div>
 
-                  <div className="p-2.5 rounded bg-[#0C0C0F] border border-[#222226]">
+                  <div>
                     <span className="text-[#71717A] font-latin block">Output Tokens</span>
                     <span className="text-[#F4F4F5] font-medium tabular-nums mt-0.5 block">
                       {toPersianDigits(new Intl.NumberFormat('en-US').format(task.tokenStats.outputTokens))}

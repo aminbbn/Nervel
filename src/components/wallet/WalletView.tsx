@@ -46,13 +46,13 @@ export const WalletView: React.FC = () => {
 
   return (
     <div className="w-full space-y-8 animate-nervel-enter">
-      {/* Page Header with Top-Up Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#18181C]">
+      {/* Page Header as ONE horizontal composition */}
+      <div className="flex flex-row items-center justify-between gap-4 pb-2 border-b border-[#18181C]">
         <div>
-          <h1 className="text-2xl font-bold text-[#F4F4F5]">
+          <h1 className="text-2xl sm:text-[26px] font-bold text-[#F4F4F5]">
             کیف پول
           </h1>
-          <p className="text-sm text-[#71717A] mt-1.5 leading-relaxed">
+          <p className="text-sm text-[#71717A] mt-1 leading-relaxed">
             مدیریت موجودی آزاد، سقف‌های مسدود در تسک‌ها و تاریخچه تراکنش‌ها
           </p>
         </div>
@@ -61,7 +61,7 @@ export const WalletView: React.FC = () => {
           variant="primary"
           onClick={() => setIsTopUpModalOpen(true)}
           rightIcon={<Plus className="w-4 h-4" />}
-          className="self-start sm:self-auto font-medium shrink-0"
+          className="font-medium shrink-0"
         >
           افزایش اعتبار
         </Button>
@@ -156,104 +156,102 @@ export const WalletView: React.FC = () => {
           })}
         </div>
 
-        {/* Transactions Table */}
-        <div className="border border-[#18181C] rounded-lg overflow-hidden bg-[#08080A]">
-          {filteredTransactions.length === 0 ? (
-            <div className="py-16 text-center text-xs text-[#71717A] space-y-2">
-              <FileText className="w-6 h-6 mx-auto text-[#3F3F46]" />
-              <p>هیچ تراکنشی با این مشخصات یافت نشد.</p>
+        {/* Transactions Table - Frameless operational list */}
+        {filteredTransactions.length === 0 ? (
+          <div className="py-16 text-center text-xs text-[#71717A] space-y-2 border-y border-[#18181C]">
+            <FileText className="w-6 h-6 mx-auto text-[#3F3F46]" />
+            <p>هیچ تراکنشی با این مشخصات یافت نشد.</p>
+          </div>
+        ) : (
+          <div className="border-y border-[#18181C]">
+            {/* Header */}
+            <div className="hidden sm:grid grid-cols-12 gap-4 py-3 border-b border-[#18181C] text-xs font-medium text-[#71717A]">
+              <div className="col-span-2">شناسه و نوع</div>
+              <div className="col-span-5">شرح رویداد مالی</div>
+              <div className="col-span-2">زمان ثبت</div>
+              <div className="col-span-3 text-left">مبلغ (تومان)</div>
             </div>
-          ) : (
-            <div>
-              {/* Header */}
-              <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 border-b border-[#141418] bg-[#0A0A0D] text-xs font-medium text-[#71717A]">
-                <div className="col-span-2">شناسه و نوع</div>
-                <div className="col-span-5">شرح رویداد مالی</div>
-                <div className="col-span-2">زمان ثبت</div>
-                <div className="col-span-3 text-left">مبلغ (تومان)</div>
-              </div>
 
-              {/* Rows */}
-              <div className="divide-y divide-[#141418]">
-                {filteredTransactions.map((tx) => {
-                  const isPositive = tx.amount > 0;
+            {/* Rows */}
+            <div className="divide-y divide-[#18181C]">
+              {filteredTransactions.map((tx) => {
+                const isPositive = tx.amount > 0;
 
-                  let typeLabel = 'تراکنش';
-                  if (tx.type === 'topup') typeLabel = 'شارژ حساب';
-                  else if (tx.type === 'reserve') typeLabel = 'رزرو سقف تسک';
-                  else if (tx.type === 'release') typeLabel = 'آزادسازی سقف';
-                  else if (tx.type === 'charge' || tx.type === 'settlement') typeLabel = 'تسویه مصرف';
-                  else if (tx.type === 'refund') typeLabel = 'عودت وجه';
+                let typeLabel = 'تراکنش';
+                if (tx.type === 'topup') typeLabel = 'شارژ حساب';
+                else if (tx.type === 'reserve') typeLabel = 'رزرو سقف تسک';
+                else if (tx.type === 'release') typeLabel = 'آزادسازی سقف';
+                else if (tx.type === 'charge' || tx.type === 'settlement') typeLabel = 'تسویه مصرف';
+                else if (tx.type === 'refund') typeLabel = 'عودت وجه';
 
-                  return (
-                    <div
-                      key={tx.id}
-                      className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 px-5 py-3.5 hover:bg-[#0C0C0F] transition-colors text-xs items-start sm:items-center"
-                    >
-                      {/* Col 1: Type & ID */}
-                      <div className="col-span-2 flex items-center gap-2">
-                        <span className="w-5 h-5 rounded flex items-center justify-center shrink-0 text-[#71717A]">
-                          {isPositive ? (
-                            <ArrowDownLeft className="w-3.5 h-3.5 text-[#10B981]" />
-                          ) : (
-                            <ArrowUpRight className="w-3.5 h-3.5 text-[#71717A]" />
-                          )}
+                return (
+                  <div
+                    key={tx.id}
+                    className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 py-3.5 -mx-3 px-3 sm:-mx-4 sm:px-4 rounded-md hover:bg-[#0A0A0D] transition-colors text-xs items-start sm:items-center"
+                  >
+                    {/* Col 1: Type & ID */}
+                    <div className="col-span-2 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded flex items-center justify-center shrink-0 text-[#71717A]">
+                        {isPositive ? (
+                          <ArrowDownLeft className="w-3.5 h-3.5 text-[#10B981]" />
+                        ) : (
+                          <ArrowUpRight className="w-3.5 h-3.5 text-[#71717A]" />
+                        )}
+                      </span>
+                      <div>
+                        <span className="text-[11px] font-latin tabular-nums text-[#71717A] block" dir="ltr">
+                          {tx.id}
                         </span>
-                        <div>
-                          <span className="text-[11px] font-latin tabular-nums text-[#71717A] block" dir="ltr">
-                            {tx.id}
-                          </span>
-                          <span className="text-xs font-medium text-[#D4D4D8]">
-                            {typeLabel}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Col 2: Title & Task Link */}
-                      <div className="col-span-5 min-w-0 space-y-0.5">
-                        <div className="text-[#F4F4F5] font-medium truncate">
-                          {tx.title}
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap text-[11px] text-[#71717A]">
-                          {tx.taskId && (
-                            <button
-                              type="button"
-                              onClick={() => navigateToTask(tx.taskId!)}
-                              className="inline-flex items-center gap-1 text-[#7C3AED] hover:underline cursor-pointer"
-                            >
-                              <span>تسک:</span>
-                              <span className="font-latin tabular-nums" dir="ltr">{tx.taskId}</span>
-                            </button>
-                          )}
-                          {tx.trackingCode && (
-                            <span className="inline-flex items-center gap-1 text-[#71717A]">
-                              <span>رهگیری:</span>
-                              <span className="font-latin tabular-nums" dir="ltr">{tx.trackingCode}</span>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Col 3: Date */}
-                      <div className="col-span-2 text-xs text-[#71717A] whitespace-nowrap">
-                        {tx.date}
-                      </div>
-
-                      {/* Col 4: Amount */}
-                      <div className="col-span-3 text-left w-full sm:w-auto">
-                        <span className="tabular-nums font-medium text-sm text-[#F4F4F5]">
-                          {isPositive ? '+' : ''}
-                          {toPersianDigits(new Intl.NumberFormat('en-US').format(tx.amount))}
+                        <span className="text-xs font-medium text-[#D4D4D8]">
+                          {typeLabel}
                         </span>
-                        <span className="text-xs text-[#71717A] mr-1">تومان</span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {/* Col 2: Title & Task Link */}
+                    <div className="col-span-5 min-w-0 space-y-0.5">
+                      <div className="text-[#F4F4F5] font-medium truncate">
+                        {tx.title}
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap text-[11px] text-[#71717A]">
+                        {tx.taskId && (
+                          <button
+                            type="button"
+                            onClick={() => navigateToTask(tx.taskId!)}
+                            className="inline-flex items-center gap-1 text-[#7C3AED] hover:underline cursor-pointer"
+                          >
+                            <span>تسک:</span>
+                            <span className="font-latin tabular-nums" dir="ltr">{tx.taskId}</span>
+                          </button>
+                        )}
+                        {tx.trackingCode && (
+                          <span className="inline-flex items-center gap-1 text-[#71717A]">
+                            <span>رهگیری:</span>
+                            <span className="font-latin tabular-nums" dir="ltr">{tx.trackingCode}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Col 3: Date */}
+                    <div className="col-span-2 text-xs text-[#71717A] whitespace-nowrap">
+                      {tx.date}
+                    </div>
+
+                    {/* Col 4: Amount */}
+                    <div className="col-span-3 text-left w-full sm:w-auto">
+                      <span className="tabular-nums font-medium text-sm text-[#F4F4F5]">
+                        {isPositive ? '+' : ''}
+                        {toPersianDigits(new Intl.NumberFormat('en-US').format(tx.amount))}
+                      </span>
+                      <span className="text-xs text-[#71717A] mr-1">تومان</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

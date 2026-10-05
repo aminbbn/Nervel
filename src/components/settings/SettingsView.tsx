@@ -72,19 +72,19 @@ export const SettingsView: React.FC = () => {
 
   return (
     <div className="w-full space-y-8 animate-nervel-enter">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#18181C]">
+      {/* Page Header as ONE horizontal composition */}
+      <div className="flex flex-row items-center justify-between gap-4 pb-2 border-b border-[#18181C]">
         <div>
-          <h1 className="text-2xl font-bold text-[#F4F4F5]">
+          <h1 className="text-2xl sm:text-[26px] font-bold text-[#F4F4F5]">
             تنظیمات
           </h1>
-          <p className="text-sm text-[#71717A] mt-1.5 leading-relaxed">
+          <p className="text-sm text-[#71717A] mt-1 leading-relaxed">
             پیکربندی هویت سازمان، مقادیر پیش‌فرض تسک‌ها، رفتار زمان‌بند در برابر خطای ورکر و کلیدهای دسترسی API
           </p>
         </div>
 
         {isSaved && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] text-xs self-start sm:self-auto shrink-0 animate-nervel-enter">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] text-xs shrink-0 animate-nervel-enter">
             <Check className="h-4 w-4" />
             <span>تنظیمات ذخیره شد</span>
           </div>

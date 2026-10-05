@@ -240,67 +240,65 @@ export const OperatorWithdrawalsTab: React.FC = () => {
         </div>
       </div>
 
-      {/* History of Requested Withdrawals */}
+      {/* History of Requested Withdrawals - Frameless */}
       <div className="space-y-3 pt-2">
         <h3 className="text-base font-bold text-[#F4F4F5]">سوابق درخواست‌های تسویه و کدهای پیگیری</h3>
 
-        <div className="border border-[#18181C] rounded-lg bg-[#09090C] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead>
-                <tr className="border-b border-[#18181C] bg-[#0C0C10] text-[#71717A]">
-                  <th className="py-3 px-4 font-medium">شناسه درخواست</th>
-                  <th className="py-3 px-4 font-medium">مبلغ تسویه</th>
-                  <th className="py-3 px-4 font-medium">شماره شبا و بانک</th>
-                  <th className="py-3 px-4 font-medium">زمان ثبت</th>
-                  <th className="py-3 px-4 font-medium">وضعیت</th>
-                  <th className="py-3 px-4 font-medium text-left">کد رهگیری پایا</th>
+        <div className="border-y border-[#18181B] overflow-x-auto">
+          <table className="w-full text-right text-xs">
+            <thead>
+              <tr className="border-b border-[#18181B] text-[#71717A]">
+                <th className="py-3 px-3 font-medium">شناسه درخواست</th>
+                <th className="py-3 px-3 font-medium">مبلغ تسویه</th>
+                <th className="py-3 px-3 font-medium">شماره شبا و بانک</th>
+                <th className="py-3 px-3 font-medium">زمان ثبت</th>
+                <th className="py-3 px-3 font-medium">وضعیت</th>
+                <th className="py-3 px-3 font-medium text-left">کد رهگیری پایا</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#18181B]">
+              {operatorWithdrawals.map((w) => (
+                <tr key={w.id} className="hover:bg-[#0A0A0D] transition-colors">
+                  <td className="py-3.5 px-3 font-latin tabular-nums text-sm text-[#A1A1AA]" dir="ltr">
+                    {w.id}
+                  </td>
+
+                  <td className="py-3.5 px-3 font-medium text-[#F4F4F5] tabular-nums">
+                    {formatToman(w.amount)}
+                  </td>
+
+                  <td className="py-3.5 px-3">
+                    <div className="space-y-0.5">
+                      <span className="text-[#D4D4D8] font-latin tabular-nums text-xs" dir="ltr">
+                        {w.iban}
+                      </span>
+                      <span className="text-xs text-[#71717A] block">{w.bankName || 'بانک مقصد'}</span>
+                    </div>
+                  </td>
+
+                  <td className="py-3.5 px-3 text-[#71717A]">
+                    {w.requestedAt}
+                  </td>
+
+                  <td className="py-3.5 px-3 whitespace-nowrap">
+                    {getStatusBadge(w.status)}
+                  </td>
+
+                  <td className="py-3.5 px-3 text-left">
+                    {w.trackingCode ? (
+                      <span className="font-latin tabular-nums text-sm text-[#A1A1AA]" dir="ltr">
+                        {w.trackingCode}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#71717A]">
+                        — (در نوبت صدور)
+                      </span>
+                    )}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-[#141418]">
-                {operatorWithdrawals.map((w) => (
-                  <tr key={w.id} className="hover:bg-[#0E0E12] transition-colors">
-                    <td className="py-3.5 px-4 font-latin tabular-nums text-sm text-[#A1A1AA]" dir="ltr">
-                      {w.id}
-                    </td>
-
-                    <td className="py-3.5 px-4 font-medium text-[#F4F4F5] tabular-nums">
-                      {formatToman(w.amount)}
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div className="space-y-0.5">
-                        <span className="text-[#D4D4D8] font-latin tabular-nums text-xs" dir="ltr">
-                          {w.iban}
-                        </span>
-                        <span className="text-xs text-[#71717A] block">{w.bankName || 'بانک مقصد'}</span>
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-[#71717A]">
-                      {w.requestedAt}
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      {getStatusBadge(w.status)}
-                    </td>
-
-                    <td className="py-3.5 px-4 text-left">
-                      {w.trackingCode ? (
-                        <span className="font-latin tabular-nums text-sm text-[#A1A1AA]" dir="ltr">
-                          {w.trackingCode}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-[#71717A]">
-                          — (در نوبت صدور)
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

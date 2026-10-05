@@ -38,18 +38,18 @@ export const OperatorOverviewTab: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-nervel-enter">
-      {/* 1. Page Header with Contextual Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#18181C]">
+      {/* 1. Page Header as ONE horizontal composition */}
+      <div className="flex flex-row items-center justify-between gap-4 pb-2 border-b border-[#18181C]">
         <div>
-          <h1 className="text-2xl font-bold text-[#F4F4F5]">
+          <h1 className="text-2xl sm:text-[26px] font-bold text-[#F4F4F5]">
             نمای کلی
           </h1>
-          <p className="text-sm text-[#71717A] mt-1.5 leading-relaxed">
+          <p className="text-sm text-[#71717A] mt-1 leading-relaxed">
             وضعیت پردازش کانتینرها، ظرفیت زمان‌بند مرکزی و عملکرد عملیاتی گره
           </p>
         </div>
 
-        <div className="flex items-center gap-3 self-start sm:self-auto shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={toggleOperatorStatus}
             className={`px-3.5 py-2 text-sm font-medium rounded transition-colors cursor-pointer border ${
@@ -234,12 +234,12 @@ export const OperatorOverviewTab: React.FC = () => {
             </button>
           </div>
 
-          <div className="border border-[#18181C] rounded-lg bg-[#09090C] divide-y divide-[#141418] overflow-hidden">
+          <div className="border-y border-[#18181B] divide-y divide-[#18181B]">
             {completedJobs.map((t) => (
               <div
                 key={t.id}
                 onClick={() => navigateToTask(t.id)}
-                className="p-3.5 flex items-center justify-between gap-4 text-xs hover:bg-[#0E0E12] transition-colors cursor-pointer select-none"
+                className="py-3.5 -mx-2 px-2 sm:-mx-3 sm:px-3 rounded-md flex items-center justify-between gap-4 text-xs hover:bg-[#0A0A0D] transition-colors cursor-pointer select-none"
               >
                 <div className="space-y-0.5 min-w-0">
                   <div className="flex items-center gap-2 text-sm">

@@ -351,3 +351,32 @@
     transform: none !important;
   }
 }
+
+/* ==========================================================================
+   Public Section Unit Progressive Motion
+   Duration: 100ms, Easing: cubic-bezier(0.16, 1, 0.3, 1)
+   Animate ONLY opacity and transform (no scale, no bounce, no blur)
+   ========================================================================== */
+@keyframes section-reveal {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-section-reveal {
+  animation: section-reveal 100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-section-reveal {
+    animation: toast-fade-in 80ms ease both !important;
+    transform: none !important;
+  }
+}
+

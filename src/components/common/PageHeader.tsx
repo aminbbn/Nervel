@@ -12,6 +12,7 @@ export interface PageHeaderProps {
   description?: string;
   actions?: ReactNode;
   className?: string;
+  withBorder?: boolean;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
@@ -20,9 +21,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   description,
   actions,
   className = '',
+  withBorder = false,
 }) => {
   return (
-    <div className={`border-b border-[#18181B] pb-6 mb-8 ${className}`}>
+    <div
+      className={`${
+        withBorder ? 'border-b border-[#18181B] pb-6' : 'pb-2'
+      } mb-6 sm:mb-8 ${className}`}
+    >
       {/* Optional Breadcrumb Trail */}
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav className="flex items-center gap-1.5 text-xs text-[#71717A] mb-3" aria-label="مسیر راهنما">

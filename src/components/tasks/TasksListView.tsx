@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useNervel } from '../../context/NervelContext';
 import { StatusIndicator } from '../common/StatusIndicator';
 import { Button } from '../common/Button';
+import { OperationalList } from '../common/OperationalList';
+import { OperationalRow } from '../common/OperationalRow';
+import { MetadataLine } from '../common/MetadataLine';
+import { SectionHeader } from '../common/SectionHeader';
 import { formatToman, toPersianDigits } from '../../utils/formatters';
 import { TaskItem, TaskStatus } from '../../types';
 import { getAllModels } from '../../services/modelRegistry';
@@ -112,72 +116,51 @@ export const TasksListView: React.FC = () => {
 
   const renderTaskRow = (task: TaskItem) => {
     return (
-      <div
+      <OperationalRow
         key={task.id}
         onClick={() => navigateToTask(task.id)}
-        className="p-5 sm:px-6 hover:bg-[#0C0C0F] transition-colors cursor-pointer flex flex-col md:flex-row md:items-center md:justify-between gap-4 select-none"
-      >
-        {/* Main Content: Title, Project/Source */}
-        <div className="space-y-1.5 min-w-0 flex-1">
-          <div className="flex items-center gap-3">
-            <h3 className="text-base font-medium text-[#F4F4F5] hover:text-[#7C3AED] transition-colors leading-snug">
+        identity={
+          <div className="space-y-1">
+            <h3 className="text-[16px] sm:text-[17px] font-bold text-[#F4F4F5] hover:text-[#7C3AED] transition-colors leading-snug">
               {task.title}
             </h3>
+
+            <MetadataLine
+              items={[
+                task.repoUrl
+                  ? {
+                      icon: <FolderGit2 className="h-3.5 w-3.5" />,
+                      label: task.repoUrl,
+                      isLtr: true,
+                    }
+                  : { label: 'فایل‌های مستقیم' },
+                task.branch && {
+                  icon: <GitBranch className="h-3 w-3" />,
+                  label: task.branch,
+                  isLtr: true,
+                },
+                { label: task.id, isLtr: true },
+                task.modelName && { label: `مدل: ${task.modelName}` },
+                {
+                  label: task.actualCost
+                    ? formatToman(task.actualCost)
+                    : `سقف: ${formatToman(task.reservedCap)}`,
+                },
+              ]}
+            />
           </div>
-
-          <div className="flex flex-wrap items-center gap-3 text-sm text-[#71717A]">
-            {task.repoUrl ? (
-              <span className="flex items-center gap-1.5 text-[#A1A1AA] font-latin" dir="ltr">
-                <FolderGit2 className="h-4 w-4 text-[#52525B]" />
-                <span>{task.repoUrl}</span>
-              </span>
-            ) : (
-              <span className="text-[#A1A1AA]">فایل‌های مستقیم</span>
-            )}
-
-            {task.branch && (
-              <>
-                <span className="text-[#3F3F46]">·</span>
-                <span className="flex items-center gap-1 font-latin" dir="ltr">
-                  <GitBranch className="h-3.5 w-3.5 text-[#52525B]" />
-                  <span>{task.branch}</span>
-                </span>
-              </>
-            )}
-
-            <span className="text-[#3F3F46]">·</span>
-            <span className="text-[#71717A] tabular-nums font-latin" dir="ltr">
-              {task.id}
-            </span>
-
-            {/* Model & Cost as secondary metadata */}
-            <span className="text-[#3F3F46] hidden lg:inline">·</span>
-            <span className="hidden lg:inline text-[#71717A]">
-              مدل: <span className="font-latin">{task.modelName}</span>
-            </span>
-
-            <span className="text-[#3F3F46] hidden sm:inline">·</span>
-            <span className="hidden sm:inline tabular-nums text-[#8E8E93]">
-              {task.actualCost ? formatToman(task.actualCost) : `سقف: ${formatToman(task.reservedCap)}`}
-            </span>
-          </div>
-        </div>
-
-        {/* Status, Time, Pin & Navigation */}
-        <div className="flex items-center justify-between md:justify-end gap-5 shrink-0">
-          <div className="flex items-center gap-4">
-            {/* Customer-facing status */}
+        }
+        status={
+          <div className="space-y-1">
             <StatusIndicator status={task.status} size="md" />
-
-            {/* Elapsed/Completion time */}
-            <div className="flex items-center gap-1.5 text-sm text-[#71717A]">
-              <Clock className="h-4 w-4 text-[#52525B]" />
-              <span className="tabular-nums">{getElapsedOrCompleteTime(task)}</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#71717A] tabular-nums">
+              <Clock className="h-3 w-3 text-[#52525B]" />
+              <span>{getElapsedOrCompleteTime(task)}</span>
             </div>
           </div>
-
+        }
+        action={
           <div className="flex items-center gap-2">
-            {/* Pin Toggle Control */}
             <button
               type="button"
               onClick={(e) => {
@@ -185,29 +168,29 @@ export const TasksListView: React.FC = () => {
                 togglePinTask(task.id);
               }}
               title={task.isPinned ? 'حذف از نشان‌شده‌ها' : 'نشان کردن تسک'}
-              className={`p-2.5 rounded-md transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+              className={`p-2 rounded transition-colors cursor-pointer flex items-center justify-center ${
                 task.isPinned
                   ? 'text-[#7C3AED] bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20'
                   : 'text-[#52525B] hover:text-[#A1A1AA] hover:bg-[#141418]'
               }`}
             >
-              <Pin className={`h-4.5 w-4.5 ${task.isPinned ? 'fill-current' : ''}`} />
+              <Pin className={`h-4 w-4 ${task.isPinned ? 'fill-current' : ''}`} />
             </button>
 
-            <ArrowLeft className="h-4 w-4 text-[#52525B] hidden sm:block" />
+            <ArrowLeft className="h-4 w-4 text-[#52525B] group-hover:text-[#F4F4F5] transition-colors" />
           </div>
-        </div>
-      </div>
+        }
+      />
     );
   };
 
   return (
     <div className="w-full space-y-8 animate-nervel-enter">
       
-      {/* Top Header & Primary CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#18181B]">
+      {/* Top Header as ONE horizontal composition */}
+      <div className="flex flex-row items-center justify-between gap-4 pb-2 border-b border-[#18181C]">
         <div>
-          <h1 className="text-2xl font-bold text-[#F4F4F5]">
+          <h1 className="text-2xl sm:text-[26px] font-bold text-[#F4F4F5]">
             تسک‌ها
           </h1>
           <p className="text-sm text-[#71717A] mt-1 leading-relaxed">
@@ -218,10 +201,10 @@ export const TasksListView: React.FC = () => {
         <Button
           variant="primary"
           onClick={() => setView('new_task')}
-          rightIcon={<Plus className="h-4.5 w-4.5" />}
-          className="self-start sm:self-auto shrink-0"
+          rightIcon={<Plus className="h-4 w-4" />}
+          className="shrink-0 font-medium"
         >
-          تسک جدید
+          ثبت تسک جدید
         </Button>
       </div>
 
@@ -378,40 +361,30 @@ export const TasksListView: React.FC = () => {
 
       {/* Pinned Tasks Section (Above normal tasks) */}
       {pinnedTasks.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center gap-2 pb-1">
-            <Pin className="h-4 w-4 text-[#7C3AED] fill-current" />
-            <h2 className="text-lg font-bold text-[#F4F4F5]">
-              تسک‌های نشان‌شده
-            </h2>
-            <span className="text-xs text-[#71717A] tabular-nums">
-              ({toPersianDigits(pinnedTasks.length)})
-            </span>
-          </div>
+        <section className="space-y-2">
+          <SectionHeader
+            title="تسک‌های نشان‌شده"
+            count={toPersianDigits(pinnedTasks.length)}
+            semanticDot="bg-[#7C3AED]"
+          />
 
-          <div className="border border-[#1E1E22] rounded-lg overflow-hidden bg-[#08080A]">
-            <div className="divide-y divide-[#18181B]">
-              {pinnedTasks.map(renderTaskRow)}
-            </div>
-          </div>
+          <OperationalList>
+            {pinnedTasks.map(renderTaskRow)}
+          </OperationalList>
         </section>
       )}
 
       {/* Main Tasks List */}
-      <section className="space-y-3">
+      <section className="space-y-2">
         {pinnedTasks.length > 0 && (
-          <div className="flex items-center gap-2 pb-1">
-            <h2 className="text-lg font-bold text-[#F4F4F5]">
-              سایر تسک‌ها
-            </h2>
-            <span className="text-xs text-[#71717A] tabular-nums">
-              ({toPersianDigits(unpinnedTasks.length)})
-            </span>
-          </div>
+          <SectionHeader
+            title="سایر تسک‌ها"
+            count={toPersianDigits(unpinnedTasks.length)}
+          />
         )}
 
         {filteredTasks.length === 0 ? (
-          <div className="border border-[#18181B] rounded-lg p-12 text-center bg-[#08080A]">
+          <div className="py-12 text-center border-y border-[#18181B]">
             <p className="text-sm text-[#71717A]">
               هیچ تسکی با فیلترهای فعلی یافت نشد.
             </p>
@@ -427,11 +400,9 @@ export const TasksListView: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="border border-[#18181B] rounded-lg overflow-hidden bg-[#08080A]">
-            <div className="divide-y divide-[#18181B]">
-              {unpinnedTasks.map(renderTaskRow)}
-            </div>
-          </div>
+          <OperationalList>
+            {unpinnedTasks.map(renderTaskRow)}
+          </OperationalList>
         )}
       </section>
 

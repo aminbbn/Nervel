@@ -10,20 +10,37 @@ export const LandingHeader: React.FC = () => {
   const handleNavClick = (target: string) => {
     setMobileMenuOpen(false);
     if (target === 'operators') {
-      navigate('/operator');
+      const el = document.getElementById('operators');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        navigate('/operator');
+      }
     } else if (target === 'login') {
       navigate('/dashboard');
     } else if (target === 'new_task') {
       navigate('/tasks/new');
+    } else if (target === 'product') {
+      const el = document.getElementById('how-it-works');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else if (target === 'docs') {
+      const el = document.getElementById('execution-network');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
     } else {
-      // Smooth scroll to hero or stay on current section
+      // Smooth scroll to top (hero)
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   return (
     <header className="w-full border-b border-[#18181B] bg-[#050506]/95 backdrop-blur-md sticky top-0 z-40 select-none">
-      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 h-16 flex items-center justify-between">
         
         {/* Right side in RTL: Brand & Restrained Nav */}
         <div className="flex items-center gap-8 sm:gap-10">

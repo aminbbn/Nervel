@@ -66,7 +66,14 @@ export const HeroSection: React.FC = () => {
 
             {/* Secondary CTA: Visually quiet */}
             <button
-              onClick={() => setShowHowItWorksModal(true)}
+              onClick={() => {
+                const el = document.getElementById('how-it-works');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  setShowHowItWorksModal(true);
+                }
+              }}
               className="inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-5 rounded-md bg-transparent hover:bg-[#121216] border border-[#27272A] hover:border-[#3F3F46] text-[#D4D4D8] text-[14px] sm:text-[15px] font-medium transition-colors cursor-pointer"
             >
               <HelpCircle className="h-4 w-4 text-[#71717A]" />

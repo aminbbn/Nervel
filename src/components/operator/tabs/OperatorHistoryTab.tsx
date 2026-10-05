@@ -98,94 +98,92 @@ export const OperatorHistoryTab: React.FC = () => {
         </div>
       </div>
 
-      {/* History Table */}
-      <div className="border border-[#18181C] rounded-lg bg-[#09090C] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right text-sm">
-            <thead>
-              <tr className="border-b border-[#18181C] bg-[#0C0C10] text-[#71717A] text-xs">
-                <th className="py-3 px-4 font-medium">شناسه و عنوان تسک</th>
-                <th className="py-3 px-4 font-medium">مدل استفاده‌شده</th>
-                <th className="py-3 px-4 font-medium">زمان تحویل</th>
-                <th className="py-3 px-4 font-medium">توکن‌های پردازش‌شده</th>
-                <th className="py-3 px-4 font-medium">کنترل کیفیت (QA)</th>
-                <th className="py-3 px-4 font-medium text-left">درآمد اپراتور</th>
-                <th className="py-3 px-4 font-medium text-center">جزئیات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#141418]">
-              {filteredTasks.length > 0 ? (
-                filteredTasks.map((t) => {
-                  const operatorEarnings = calculateOperatorPayout(t);
-                  const totalTokens =
-                    (t.tokenStats?.inputTokens || 0) + (t.tokenStats?.outputTokens || 0);
+      {/* History Table - Frameless */}
+      <div className="border-y border-[#18181B] overflow-x-auto">
+        <table className="w-full text-right text-sm">
+          <thead>
+            <tr className="border-b border-[#18181B] text-[#71717A] text-xs">
+              <th className="py-3 px-3 font-medium">شناسه و عنوان تسک</th>
+              <th className="py-3 px-3 font-medium">مدل استفاده‌شده</th>
+              <th className="py-3 px-3 font-medium">زمان تحویل</th>
+              <th className="py-3 px-3 font-medium">توکن‌های پردازش‌شده</th>
+              <th className="py-3 px-3 font-medium">کنترل کیفیت (QA)</th>
+              <th className="py-3 px-3 font-medium text-left">درآمد اپراتور</th>
+              <th className="py-3 px-3 font-medium text-center">جزئیات</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#18181B]">
+            {filteredTasks.length > 0 ? (
+              filteredTasks.map((t) => {
+                const operatorEarnings = calculateOperatorPayout(t);
+                const totalTokens =
+                  (t.tokenStats?.inputTokens || 0) + (t.tokenStats?.outputTokens || 0);
 
-                  return (
-                    <tr key={t.id} className="hover:bg-[#0E0E12] transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="space-y-0.5">
-                          <span className="font-medium text-[#F4F4F5] line-clamp-1">
-                            {t.title}
-                          </span>
-                          <div className="flex items-center gap-2 text-xs text-[#71717A]" dir="ltr">
-                            <span className="font-latin tabular-nums font-medium">{t.id}</span>
-                            {t.repoUrl && <span>· {t.repoUrl}</span>}
-                          </div>
+                return (
+                  <tr key={t.id} className="hover:bg-[#0A0A0D] transition-colors">
+                    <td className="py-3.5 px-3">
+                      <div className="space-y-0.5">
+                        <span className="font-medium text-[#F4F4F5] line-clamp-1">
+                          {t.title}
+                        </span>
+                        <div className="flex items-center gap-2 text-xs text-[#71717A]" dir="ltr">
+                          <span className="font-latin tabular-nums font-medium">{t.id}</span>
+                          {t.repoUrl && <span>· {t.repoUrl}</span>}
                         </div>
-                      </td>
+                      </div>
+                    </td>
 
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="text-[#A1A1AA]">{t.modelName}</span>
-                      </td>
+                    <td className="py-3.5 px-3 whitespace-nowrap">
+                      <span className="text-[#A1A1AA]">{t.modelName}</span>
+                    </td>
 
-                      <td className="py-3.5 px-4 whitespace-nowrap text-[#71717A]">
-                        {t.completedAt || '۱۴۰۵/۰۶/۳۰'}
-                      </td>
+                    <td className="py-3.5 px-3 whitespace-nowrap text-[#71717A]">
+                      {t.completedAt || '۱۴۰۵/۰۶/۳۰'}
+                    </td>
 
-                      <td className="py-3.5 px-4 whitespace-nowrap tabular-nums">
-                        <span className="text-[#F4F4F5] font-medium">
-                          {toPersianDigits(totalTokens)}
-                        </span>
-                        <span className="text-xs text-[#71717A] block">
-                          ورودی: {toPersianDigits(t.tokenStats?.inputTokens || 0)} · خروجی: {toPersianDigits(t.tokenStats?.outputTokens || 0)}
-                        </span>
-                      </td>
+                    <td className="py-3.5 px-3 whitespace-nowrap tabular-nums">
+                      <span className="text-[#F4F4F5] font-medium">
+                        {toPersianDigits(totalTokens)}
+                      </span>
+                      <span className="text-xs text-[#71717A] block">
+                        ورودی: {toPersianDigits(t.tokenStats?.inputTokens || 0)} · خروجی: {toPersianDigits(t.tokenStats?.outputTokens || 0)}
+                      </span>
+                    </td>
 
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 text-[#10B981]">
-                          <CheckCircle2 className="h-4 w-4" />
-                          <span>تست‌ها پاس شد ({toPersianDigits(t.qaReport?.filesChangedCount || 4)} فایل)</span>
-                        </span>
-                      </td>
+                    <td className="py-3.5 px-3 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1.5 text-[#10B981]">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>تست‌ها پاس شد ({toPersianDigits(t.qaReport?.filesChangedCount || 4)} فایل)</span>
+                      </span>
+                    </td>
 
-                      <td className="py-3.5 px-4 whitespace-nowrap text-left" dir="ltr">
-                        <span className="font-medium text-[#10B981] tabular-nums text-base">
-                          +{formatToman(operatorEarnings)}
-                        </span>
-                        <span className="text-xs text-[#71717A] block">تسویه‌شده در تراز</span>
-                      </td>
+                    <td className="py-3.5 px-3 whitespace-nowrap text-left" dir="ltr">
+                      <span className="font-medium text-[#10B981] tabular-nums text-base">
+                        +{formatToman(operatorEarnings)}
+                      </span>
+                      <span className="text-xs text-[#71717A] block">تسویه‌شده در تراز</span>
+                    </td>
 
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => setInspectTask(t)}
-                          className="px-3 py-1.5 text-xs text-[#A1A1AA] hover:text-[#F4F4F5] bg-[#141418] hover:bg-[#1E1E24] border border-[#27272A] rounded transition-colors cursor-pointer"
-                        >
-                          بررسی گزارش
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-[#71717A]">
-                    هیچ تسکی با این مشخصات یافت نشد
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => setInspectTask(t)}
+                        className="px-3 py-1.5 text-xs text-[#A1A1AA] hover:text-[#F4F4F5] bg-[#141418] hover:bg-[#1E1E24] border border-[#27272A] rounded transition-colors cursor-pointer"
+                      >
+                        بررسی گزارش
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={7} className="py-12 text-center text-[#71717A]">
+                  هیچ تسکی با این مشخصات یافت نشد
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Inspect Modal / Slide-over */}

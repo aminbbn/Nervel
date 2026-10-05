@@ -82,7 +82,7 @@ export const OperatorEarningsTab: React.FC = () => {
       </div>
 
       {/* Official Staging Benchmarking Notice */}
-      <div className="p-4 sm:p-5 rounded-lg bg-[#0A0A0D] border border-[#18181C] flex items-start gap-3.5">
+      <div className="py-4 border-y border-[#18181B] flex items-start gap-3.5">
         <Info className="h-5 w-5 text-[#7C3AED] shrink-0 mt-0.5" />
         <div className="space-y-1 text-sm leading-relaxed">
           <h4 className="font-bold text-[#F4F4F5]">سیاست نرخ‌گذاری بر مبنای تفکیک توکن‌ها (Token Accounting Model)</h4>
@@ -93,7 +93,7 @@ export const OperatorEarningsTab: React.FC = () => {
       </div>
 
       {/* Integrity & Zero-Gamification Guarantee */}
-      <div className="p-5 rounded-lg bg-[#09090C] border border-[#18181C] space-y-3">
+      <div className="space-y-3 pb-6 border-b border-[#18181B]">
         <div className="flex items-center gap-2">
           <Shield className="h-4.5 w-4.5 text-[#10B981]" />
           <h3 className="text-base font-bold text-[#F4F4F5]">تضمین شفافیت مالی و رد هرگونه گیمیفیکیشن</h3>
@@ -103,15 +103,19 @@ export const OperatorEarningsTab: React.FC = () => {
           در NERVEL محاسبات مالی کاملاً ریاضی و شفاف است:
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-[#71717A]">
-          <div className="p-3.5 rounded bg-[#060608] border border-[#141418] space-y-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-[#71717A] pt-1">
+          <div className="space-y-1">
             <span className="text-[#D4D4D8] font-medium block">اثر سابقه و پایداری ورکر:</span>
-            سابقه اجرای موفق و پایداری ۹۹.۸٪ صرفاً اولویت دریافت تسک‌های جدید از زمان‌بند را بالا می‌برد و هرگز در مبلغ پرداختی به ازای توکن ضرب نمی‌شود.
+            <p className="leading-relaxed">
+              سابقه اجرای موفق و پایداری ۹۹.۸٪ صرفاً اولویت دریافت تسک‌های جدید از زمان‌بند را بالا می‌برد و هرگز در مبلغ پرداختی به ازای توکن ضرب نمی‌شود.
+            </p>
           </div>
 
-          <div className="p-3.5 rounded bg-[#060608] border border-[#141418] space-y-1">
+          <div className="space-y-1">
             <span className="text-[#D4D4D8] font-medium block">عدم وجود ضرایب متغیر و بونوس:</span>
-            هیچ‌گونه بونوس نمادین، رتبه‌بندی ستاره‌ای یا جریمه‌های سلیقه‌ای در پلتفرم وجود ندارد. هر توکن مصرف‌شده در کانتینر طبق نرخ مصوب دفتر کل پرداخت می‌گردد.
+            <p className="leading-relaxed">
+              هیچ‌گونه بونوس نمادین، رتبه‌بندی ستاره‌ای یا جریمه‌های سلیقه‌ای در پلتفرم وجود ندارد. هر توکن مصرف‌شده در کانتینر طبق نرخ مصوب دفتر کل پرداخت می‌گردد.
+            </p>
           </div>
         </div>
       </div>
@@ -119,11 +123,11 @@ export const OperatorEarningsTab: React.FC = () => {
       {/* Ledger of Executed Jobs and Token Usage Breakdown */}
       <div className="space-y-3">
         <h3 className="text-base font-bold text-[#F4F4F5]">دفتر کل پرداختی‌های تسک‌های اخیر</h3>
-        <div className="divide-y divide-[#141418] border border-[#18181C] rounded-lg bg-[#09090C] overflow-hidden">
+        <div className="border-y border-[#18181B] divide-y divide-[#18181B]">
           {completedTasks.map((t) => {
             const earnings = calculateOperatorPayout(t);
             return (
-              <div key={t.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+              <div key={t.id} className="py-4 -mx-2 px-2 sm:-mx-3 sm:px-3 rounded-md hover:bg-[#0A0A0D] transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-[#71717A] font-latin tabular-nums font-medium text-xs" dir="ltr">{t.id}</span>

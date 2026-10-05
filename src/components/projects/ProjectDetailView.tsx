@@ -4,6 +4,10 @@ import { PageHeader } from '../common/PageHeader';
 import { Button } from '../common/Button';
 import { Tabs } from '../common/Tabs';
 import { StatusIndicator } from '../common/StatusIndicator';
+import { SectionHeader } from '../common/SectionHeader';
+import { OperationalList } from '../common/OperationalList';
+import { OperationalRow } from '../common/OperationalRow';
+import { MetadataLine } from '../common/MetadataLine';
 import { toPersianDigits, formatToman } from '../../utils/formatters';
 import {
   FolderGit2,
@@ -209,212 +213,247 @@ export const ProjectDetailView: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          TAB 1: OVERVIEW (نمای کلی)
-          - tasks requiring action
-          - active tasks
-          - recent tasks
-          - source information
-          - latest relevant activity
+          TAB 1: OVERVIEW (نمای کلی) - 2-Column Deliberate Layout
+          RIGHT 8 columns: Action Required, Active Tasks, Recent Completed Tasks
+          LEFT 4 columns: Project Source, Branch, Architecture Instructions, Stats
           ========================================================================= */}
       {activeTab === 'overview' && (
-        <div className="space-y-8 animate-nervel-enter">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start animate-nervel-enter">
           
-          {/* Action Required Section */}
-          {actionRequiredTasks.length > 0 && (
-            <section className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#F59E0B]" />
-                <h2 className="text-lg font-bold text-[#F4F4F5]">
-                  نیازمند اقدام در این پروژه
-                </h2>
-                <span className="text-xs text-[#71717A] tabular-nums">
-                  ({toPersianDigits(actionRequiredTasks.length)})
-                </span>
-              </div>
+          {/* RIGHT 8 COLUMNS: Operational Task Flow */}
+          <div className="lg:col-span-8 space-y-8">
+            {/* Action Required Section */}
+            {actionRequiredTasks.length > 0 && (
+              <section className="space-y-2">
+                <SectionHeader
+                  title="نیازمند اقدام در این پروژه"
+                  count={toPersianDigits(actionRequiredTasks.length)}
+                  semanticDot="bg-[#F59E0B]"
+                />
 
-              <div className="border border-[#222226] rounded-lg overflow-hidden bg-[#0A0A0D]">
-                <div className="divide-y divide-[#18181B]">
+                <OperationalList>
                   {actionRequiredTasks.map((t) => (
-                    <div
-                      key={t.id}
-                      className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#0E0E12] transition-colors"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-base font-medium text-[#F4F4F5]">{t.title}</span>
-                          <StatusIndicator status={t.status} size="sm" />
-                        </div>
-                        <p className="text-xs text-[#A1A1AA]">
-                          {t.status === 'waiting_for_customer'
-                            ? 'ورکر منتظر پاسخ شماست.'
-                            : 'ورکر قبلی قطع شده است؛ نیاز به تایید انتقال ورکر.'}
-                        </p>
-                      </div>
-
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => navigateToTask(t.id)}
-                        leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
-                      >
-                        بررسی و اقدام
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Active Tasks Section */}
-          <section className="space-y-3">
-            <div className="flex items-center justify-between pb-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-[#F4F4F5]">تسک‌های در حال اجرا</h2>
-                <span className="text-xs text-[#71717A] tabular-nums">
-                  ({toPersianDigits(activeTasks.length)})
-                </span>
-              </div>
-            </div>
-
-            {activeTasks.length === 0 ? (
-              <div className="border border-[#18181B] rounded-lg p-8 text-center bg-[#08080A]">
-                <p className="text-sm text-[#71717A]">
-                  هیچ تسک فعالی برای این پروژه در حال اجرا نیست.
-                </p>
-                <button
-                  onClick={handleCreateTaskForProject}
-                  className="mt-2 text-sm text-[#7C3AED] hover:text-[#8B5CF6] font-medium cursor-pointer"
-                >
-                  + ایجاد اولین تسک
-                </button>
-              </div>
-            ) : (
-              <div className="border border-[#18181B] rounded-lg overflow-hidden bg-[#08080A]">
-                <div className="divide-y divide-[#18181B]">
-                  {activeTasks.map((t) => (
-                    <div
+                    <OperationalRow
                       key={t.id}
                       onClick={() => navigateToTask(t.id)}
-                      className="p-5 hover:bg-[#0C0C0F] transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                    >
-                      <div className="space-y-1 min-w-0">
-                        <div className="text-base font-medium text-[#F4F4F5] truncate">
-                          {t.title}
+                      identity={
+                        <div className="space-y-1">
+                          <h3 className="text-[16px] font-bold text-[#F4F4F5] hover:text-[#7C3AED] transition-colors leading-snug">
+                            {t.title}
+                          </h3>
+                          <p className="text-xs text-[#A1A1AA]">
+                            {t.status === 'waiting_for_customer'
+                              ? 'ورکر منتظر پاسخ و رفع ابهام شماست.'
+                              : 'ورکر قبلی قطع شده است؛ نیاز به تایید انتقال ورکر.'}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-[#71717A]">
-                          <span className="tabular-nums">ثبت: {t.createdAt}</span>
-                          {t.branch && <span dir="ltr">شاخه: {t.branch}</span>}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4 shrink-0">
-                        <StatusIndicator status={t.status} size="md" />
-                        <ArrowLeft className="h-4 w-4 text-[#52525B]" />
-                      </div>
-                    </div>
+                      }
+                      status={
+                        <StatusIndicator status={t.status} size="sm" />
+                      }
+                      action={
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigateToTask(t.id);
+                          }}
+                          leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
+                        >
+                          بررسی و اقدام
+                        </Button>
+                      }
+                    />
                   ))}
-                </div>
-              </div>
+                </OperationalList>
+              </section>
             )}
-          </section>
 
-          {/* Flattened Source Metadata & Instructions */}
-          <div className="py-2 border-y border-[#18181C] space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
-              <div className="flex flex-wrap items-center gap-6">
-                <div>
-                  <span className="text-[#71717A] block">مخزن متصل:</span>
-                  <span className="text-sm font-medium text-[#F4F4F5] font-latin" dir="ltr">
-                    {currentProject.repoUrl || 'آرشیو لوکال'}
+            {/* Active Tasks Section */}
+            <section className="space-y-2">
+              <SectionHeader
+                title="تسک‌های در حال اجرا"
+                count={toPersianDigits(activeTasks.length)}
+              />
+
+              {activeTasks.length === 0 ? (
+                <div className="py-8 text-center border-y border-[#18181C]">
+                  <p className="text-sm text-[#71717A]">
+                    هیچ تسک فعالی برای این پروژه در حال اجرا نیست.
+                  </p>
+                  <button
+                    onClick={handleCreateTaskForProject}
+                    className="mt-2 text-sm text-[#7C3AED] hover:text-[#8B5CF6] font-medium cursor-pointer"
+                  >
+                    + ثبت اولین تسک
+                  </button>
+                </div>
+              ) : (
+                <OperationalList>
+                  {activeTasks.map((t) => (
+                    <OperationalRow
+                      key={t.id}
+                      onClick={() => navigateToTask(t.id)}
+                      identity={
+                        <div className="space-y-1">
+                          <h3 className="text-[16px] font-bold text-[#F4F4F5] hover:text-[#7C3AED] transition-colors leading-snug">
+                            {t.title}
+                          </h3>
+                          <MetadataLine
+                            items={[
+                              { label: `ثبت: ${t.createdAt}` },
+                              t.branch && {
+                                icon: <GitBranch className="h-3 w-3" />,
+                                label: t.branch,
+                                isLtr: true,
+                              },
+                            ]}
+                          />
+                        </div>
+                      }
+                      status={
+                        <StatusIndicator status={t.status} size="md" />
+                      }
+                      action={
+                        <ArrowLeft className="h-4 w-4 text-[#52525B] group-hover:text-[#F4F4F5] transition-colors" />
+                      }
+                    />
+                  ))}
+                </OperationalList>
+              )}
+            </section>
+
+            {/* Recent Completed Tasks Section */}
+            {recentCompletedTasks.length > 0 && (
+              <section className="space-y-2">
+                <SectionHeader
+                  title="تسک‌های تکمیل‌شده اخیر"
+                  count={toPersianDigits(recentCompletedTasks.length)}
+                  action={
+                    <button
+                      onClick={() => setActiveTab('tasks')}
+                      className="text-xs text-[#71717A] hover:text-[#F4F4F5] transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>همه تسک‌ها</span>
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                    </button>
+                  }
+                />
+
+                <OperationalList>
+                  {recentCompletedTasks.map((t) => (
+                    <OperationalRow
+                      key={t.id}
+                      onClick={() => navigateToTask(t.id)}
+                      identity={
+                        <div className="space-y-1">
+                          <h3 className="text-[16px] font-bold text-[#F4F4F5] hover:text-[#7C3AED] transition-colors leading-snug">
+                            {t.title}
+                          </h3>
+                          <MetadataLine
+                            items={[
+                              t.deliverables?.prUrl && {
+                                icon: <GitPullRequest className="h-3 w-3 text-[#10B981]" />,
+                                label: 'PR آماده ادغام',
+                              },
+                              { label: `تکمیل: ${t.completedAt}` },
+                            ]}
+                          />
+                        </div>
+                      }
+                      status={
+                        <StatusIndicator status="completed" label="تکمیل شد" size="md" />
+                      }
+                      action={
+                        <ArrowLeft className="h-4 w-4 text-[#52525B] group-hover:text-[#F4F4F5] transition-colors" />
+                      }
+                    />
+                  ))}
+                </OperationalList>
+              </section>
+            )}
+          </div>
+
+          {/* LEFT 4 COLUMNS: Source info, Instructions, Stats & Quick Actions */}
+          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-8">
+            
+            {/* Project Environment & Source Details */}
+            <div className="space-y-3 pb-6 border-b border-[#18181C]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-[#F4F4F5]">
+                  مشخصات سورس و محیط
+                </h3>
+                <span className="text-xs text-[#10B981] flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+                  آماده اجرا
+                </span>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between py-1 border-b border-[#141418]">
+                  <span className="text-[#71717A]">مخزن متصل:</span>
+                  <span className="text-[#F4F4F5] font-latin font-medium" dir="ltr">
+                    {currentProject.repoUrl || 'سورس لوکال'}
                   </span>
                 </div>
 
-                <div>
-                  <span className="text-[#71717A] block">شاخه پیش‌فرض:</span>
-                  <span className="text-sm font-medium text-[#F4F4F5] font-latin" dir="ltr">
+                <div className="flex items-center justify-between py-1 border-b border-[#141418]">
+                  <span className="text-[#71717A]">شاخه پیش‌فرض:</span>
+                  <span className="text-[#F4F4F5] font-latin font-medium" dir="ltr">
                     {currentProject.defaultBranch || 'main'}
                   </span>
                 </div>
 
-                <div>
-                  <span className="text-[#71717A] block">نوع منبع:</span>
-                  <span className="text-sm font-medium text-[#D4D4D8]">
+                <div className="flex items-center justify-between py-1 border-b border-[#141418]">
+                  <span className="text-[#71717A]">نوع منبع:</span>
+                  <span className="text-[#D4D4D8]">
                     {currentProject.sourceType === 'github' ? 'GitHub Cloud' : 'سورس آرشیو'}
                   </span>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-[#10B981]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
-                <span>همگام با گیت و آماده</span>
-              </div>
-            </div>
-
-            {/* Persistent Instructions (Simple row/summary, no card) */}
-            <div className="pt-3 border-t border-[#141418] flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-xs">
-              <div className="space-y-1 min-w-0">
-                <span className="text-xs font-medium text-[#71717A] block">دستورالعمل‌های پایدار پروژه:</span>
-                <p className="text-xs text-[#A1A1AA] leading-relaxed">
-                  {currentProject.instructions || 'هیچ دستورالعمل ثابتی ثبت نشده است. می‌توانید قوانین معماری و نحوه تست‌ها را در بخش تنظیمات اضافه کنید.'}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('settings')}
-                className="text-xs text-[#7C3AED] hover:text-[#8B5CF6] transition-colors cursor-pointer shrink-0"
-              >
-                ویرایش دستورالعمل‌ها ←
-              </button>
-            </div>
-          </div>
-
-          {/* Recent Completed Tasks */}
-          {recentCompletedTasks.length > 0 && (
-            <section className="space-y-3">
-              <div className="flex items-center justify-between pb-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-[#F4F4F5]">تسک‌های تکمیل‌شده اخیر</h2>
-                  <span className="text-xs text-[#71717A] tabular-nums">
-                    ({toPersianDigits(recentCompletedTasks.length)})
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-[#71717A]">آخرین فعالیت:</span>
+                  <span className="text-[#71717A] tabular-nums">
+                    {currentProject.lastActivityAt}
                   </span>
                 </div>
               </div>
+            </div>
 
-              <div className="border border-[#18181B] rounded-lg overflow-hidden bg-[#08080A]">
-                <div className="divide-y divide-[#18181B]">
-                  {recentCompletedTasks.map((t) => (
-                    <div
-                      key={t.id}
-                      onClick={() => navigateToTask(t.id)}
-                      className="p-5 hover:bg-[#0C0C0F] transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                    >
-                      <div className="space-y-1 min-w-0">
-                        <div className="text-base font-medium text-[#F4F4F5] truncate">
-                          {t.title}
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-[#71717A]">
-                          {t.deliverables?.prUrl && (
-                            <span className="flex items-center gap-1 text-[#A1A1AA]" dir="ltr">
-                              <GitPullRequest className="h-3 w-3" />
-                              <span>PR آماده ادغام</span>
-                            </span>
-                          )}
-                          <span className="tabular-nums">تکمیل: {t.completedAt}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        <StatusIndicator status="completed" label="تکمیل شد" size="md" />
-                        <ArrowLeft className="h-4 w-4 text-[#52525B]" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* Architecture & Codebase Guidelines Summary */}
+            <div className="space-y-3 pb-6 border-b border-[#18181C]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-[#F4F4F5]">
+                  دستورالعمل‌های پایدار
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('settings')}
+                  className="text-xs text-[#7C3AED] hover:text-[#8B5CF6] transition-colors cursor-pointer"
+                >
+                  ویرایش
+                </button>
               </div>
-            </section>
-          )}
+
+              <p className="text-xs text-[#A1A1AA] leading-relaxed line-clamp-4">
+                {currentProject.instructions || 'هیچ دستورالعمل ثابتی ثبت نشده است. می‌توانید قوانین معماری، تست‌ها و محدودیت‌ها را در تنظیمات پروژه اضافه کنید.'}
+              </p>
+            </div>
+
+            {/* Quick Project CTA */}
+            <div className="space-y-3">
+              <Button
+                variant="primary"
+                onClick={handleCreateTaskForProject}
+                rightIcon={<Plus className="h-4 w-4" />}
+                className="w-full justify-center font-bold"
+              >
+                ثبت تسک برای این پروژه
+              </Button>
+            </div>
+
+          </div>
 
         </div>
       )}
@@ -439,7 +478,7 @@ export const ProjectDetailView: React.FC = () => {
           </div>
 
           {projectTasks.length === 0 ? (
-            <div className="border border-[#18181B] rounded-lg p-12 text-center bg-[#08080A]">
+            <div className="py-12 text-center border-y border-[#18181B]">
               <p className="text-sm text-[#71717A]">
                 هنوز هیچ تسکی برای این پروژه ثبت نشده است.
               </p>
@@ -453,53 +492,51 @@ export const ProjectDetailView: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <div className="border border-[#18181B] rounded-lg overflow-hidden bg-[#08080A]">
-              <div className="divide-y divide-[#18181B]">
-                {projectTasks.map((t) => (
-                  <div
-                    key={t.id}
-                    onClick={() => navigateToTask(t.id)}
-                    className="p-5 hover:bg-[#0C0C0F] transition-colors cursor-pointer flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-                  >
-                    <div className="space-y-1.5 min-w-0 flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="text-base font-medium text-[#F4F4F5]">
-                          {t.title}
-                        </span>
-                        <StatusIndicator status={t.status} size="sm" />
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-[#71717A]">
-                        <span className="tabular-nums" dir="ltr">{t.id}</span>
-                        <span>·</span>
-                        <span>مدل: {t.modelName}</span>
-                        <span>·</span>
-                        <span className="tabular-nums">تاریخ: {t.createdAt}</span>
-                        {t.actualCost && (
-                          <>
-                            <span>·</span>
-                            <span className="tabular-nums">هزینه: {formatToman(t.actualCost)}</span>
-                          </>
-                        )}
-                      </div>
+            <div className="divide-y divide-[#18181B] border-y border-[#18181B]">
+              {projectTasks.map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => navigateToTask(t.id)}
+                  className="py-4 sm:py-5 -mx-3 px-3 sm:-mx-4 sm:px-4 rounded-md hover:bg-[#0A0A0D] transition-colors cursor-pointer flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                >
+                  <div className="space-y-1.5 min-w-0 flex-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-base font-medium text-[#F4F4F5] hover:text-[#7C3AED] transition-colors">
+                        {t.title}
+                      </span>
+                      <StatusIndicator status={t.status} size="sm" />
                     </div>
 
-                    <div className="flex items-center gap-4 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigateToTask(t.id);
-                        }}
-                        leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
-                      >
-                        مشاهده جزئیات
-                      </Button>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-[#71717A]">
+                      <span className="tabular-nums font-latin" dir="ltr">{t.id}</span>
+                      <span>·</span>
+                      <span>مدل: {t.modelName}</span>
+                      <span>·</span>
+                      <span className="tabular-nums">تاریخ: {t.createdAt}</span>
+                      {t.actualCost && (
+                        <>
+                          <span>·</span>
+                          <span className="tabular-nums">هزینه: {formatToman(t.actualCost)}</span>
+                        </>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  <div className="flex items-center gap-4 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateToTask(t.id);
+                      }}
+                      leftIcon={<ArrowLeft className="h-3.5 w-3.5" />}
+                    >
+                      مشاهده جزئیات
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -509,7 +546,7 @@ export const ProjectDetailView: React.FC = () => {
           TAB 3: PROJECT SETTINGS & PERSISTENT INSTRUCTIONS
           ========================================================================= */}
       {activeTab === 'settings' && (
-        <form onSubmit={handleSaveSettings} className="space-y-6 w-full max-w-3xl animate-nervel-enter">
+        <form onSubmit={handleSaveSettings} className="space-y-8 w-full max-w-3xl animate-nervel-enter">
           
           {isSaved && (
             <div className="p-3.5 rounded-md bg-[#10B981]/10 border border-[#10B981]/30 flex items-center gap-2 text-sm text-[#10B981]">
@@ -519,7 +556,7 @@ export const ProjectDetailView: React.FC = () => {
           )}
 
           {/* Project Metadata */}
-          <div className="border border-[#18181B] rounded-lg p-6 bg-[#08080A] space-y-4">
+          <div className="space-y-4 pb-6 border-b border-[#18181B]">
             <h3 className="text-base font-bold text-[#F4F4F5]">مشخصات پروژه</h3>
 
             <div className="space-y-4">
@@ -553,7 +590,7 @@ export const ProjectDetailView: React.FC = () => {
           </div>
 
           {/* Persistent Project Instructions (Primary Requirement) */}
-          <div className="border border-[#18181B] rounded-lg p-6 bg-[#08080A] space-y-4">
+          <div className="space-y-4 pb-6 border-b border-[#18181B]">
             <div>
               <h3 className="text-base font-bold text-[#F4F4F5] flex items-center gap-2">
                 <Terminal className="h-4 w-4 text-[#7C3AED]" />

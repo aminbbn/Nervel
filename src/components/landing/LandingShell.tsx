@@ -1,7 +1,13 @@
 import React from 'react';
 import { LandingHeader } from './LandingHeader';
 import { HeroSection } from './HeroSection';
-import { BRAND } from '../../config/brand';
+import { HowItWorksSection } from './HowItWorksSection';
+import { OutputDeliverablesSection } from './OutputDeliverablesSection';
+import { ExecutionNetworkSection } from './ExecutionNetworkSection';
+import { CostControlSection } from './CostControlSection';
+import { ForOperatorsSection } from './ForOperatorsSection';
+import { FinalCtaSection } from './FinalCtaSection';
+import { LandingFooter } from './LandingFooter';
 
 export const LandingShell: React.FC = () => {
   return (
@@ -9,24 +15,32 @@ export const LandingShell: React.FC = () => {
       {/* 1. Minimal Public Header */}
       <LandingHeader />
 
-      {/* 2. Main Public Content Area */}
+      {/* 2. Main Public Content Sections */}
       <main className="flex-1 w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
+        {/* Section 0: Hero & Live Execution Preview */}
         <HeroSection />
+
+        {/* Section 1: How It Works (3 Steps) */}
+        <HowItWorksSection />
+
+        {/* Section 2: Output Deliverables & Realistic Product Output Surface */}
+        <OutputDeliverablesSection />
+
+        {/* Section 3: Execution Network & Worker Eligibility */}
+        <ExecutionNetworkSection />
+
+        {/* Section 4: Cost Control & Reserve Ceiling */}
+        <CostControlSection />
+
+        {/* Section 5: For Operators */}
+        <ForOperatorsSection />
+
+        {/* Section 6: Final Call to Action */}
+        <FinalCtaSection />
       </main>
 
-      {/* 3. Minimal Public Subtle Footer Line */}
-      <footer className="w-full border-t border-[#141418] py-6 text-xs text-[#52525B] select-none">
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right">
-          <div className="flex items-center gap-2 font-latin" dir="ltr">
-            <span className="font-medium text-[#71717A]">{BRAND.name}</span>
-            <span>·</span>
-            <span>Software Task Execution Infrastructure</span>
-          </div>
-          <div className="text-[11px] text-[#52525B]">
-            تمامی حقوق و استانداردها محفوظ است · ۱۴۰۵
-          </div>
-        </div>
-      </footer>
+      {/* 3. Minimal Public Footer */}
+      <LandingFooter />
     </div>
   );
 };
